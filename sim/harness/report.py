@@ -918,10 +918,11 @@ def render_markdown(record: dict) -> str:
 
     lines += ["", "## Evidence"]
     lines += record.get("_evidence_lines", []) or ["- (no extension fields)"]
+    # render_lines always returns at least one bullet (NO_STRESS_LINE for an empty
+    # scope, incl. archived records with no ``scope`` key), so the heading is unconditional.
     scope_lines = pump_evidence.render_lines(
         record.get("scope") or {"output_lines": [], "stress": []})
-    if scope_lines:
-        lines += ["", "## Scope rule (output under load, device stress)"] + scope_lines
+    lines += ["", "## Scope rule (output under load, device stress)"] + scope_lines
 
     lines += ["", "## Result"]
     # The overall verdict follows the record's own status (build_record), never
