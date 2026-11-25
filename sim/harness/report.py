@@ -42,7 +42,11 @@ from collections import defaultdict
 from pathlib import Path
 
 from . import HARNESS_VERSION, UPSTREAM_PATTERN
-from .corners import DEFAULT_SUPPLY_TOLERANCE, DEFAULT_TEMPERATURES_C
+from .corners import (
+    DEFAULT_MIMCAP_SECTIONS,
+    DEFAULT_SUPPLY_TOLERANCE,
+    DEFAULT_TEMPERATURES_C,
+)
 from . import pump_evidence
 from .evidence import BaseExtensions
 from .pdk import Pdk
@@ -198,21 +202,26 @@ def summarize(results: list[PointResult], measure_names: list[str]) -> dict:
     summary: dict[str, dict] = {}
     ok = [r for r in results if r.status == "ok"]
     for name in measure_names:
-        samples = [(r.measurements[name], r.point.corner_id) for r in ok if name in r.measurements]
+        samples = [
+            (r.measurements[name], r.point.corner_id, r.point.mimcap)
+            for r in ok if name in r.measurements
+        ]
         if not samples:
             summary[name] = {"n": 0}
             continue
-        values = [v for v, _ in samples]
-        lo_value, lo_at = min(samples, key=lambda s: s[0])
-        hi_value, hi_at = max(samples, key=lambda s: s[0])
+        values = [v for v, _, _ in samples]
+        lo_value, lo_at, lo_mimcap = min(samples, key=lambda s: s[0])
+        hi_value, hi_at, hi_mimcap = max(samples, key=lambda s: s[0])
         mean = sum(values) / len(values)
         spread_pct = (hi_value - lo_value) / abs(mean) * 100.0 if mean else None
         summary[name] = {
             "n": len(values),
             "min": lo_value,
             "min_at": lo_at,
+            "min_mimcap": lo_mimcap,
             "max": hi_value,
             "max_at": hi_at,
+            "max_mimcap": hi_mimcap,
             "mean": mean,
             "spread_pct": spread_pct,
         }
@@ -320,17 +329,17 @@ def evaluate_checks(
                 value = result.measurements[name]
                 if _bad(value) or _bad(low) or _bad(high):
                     _nonfinite(name, "min/max", {"min": low, "max": high}, value,
-                               result.point.corner_id)
+                               result.point.corner_id, mimcap=result.point.mimcap)
                     continue
                 if low is not None and value < low:
                     failures.append(
                         {"measurement": name, "kind": "min", "limit": low, "value": value,
-                         "at": result.point.corner_id}
+                         "at": result.point.corner_id, "mimcap": result.point.mimcap}
                     )
                 if high is not None and value > high:
                     failures.append(
                         {"measurement": name, "kind": "max", "limit": high, "value": value,
-                         "at": result.point.corner_id}
+                         "at": result.point.corner_id, "mimcap": result.point.mimcap}
                     )
         for kind, limit in (
             ("max_spread_pct", spec.get("max_spread_pct")),
@@ -541,8 +550,11 @@ def matrix_conformance(tb: Testbench, points) -> dict:
     temps = {round(p.temp_c, 6) for p in points}
     supplies = {round(p.vdd, 6) for p in points}
     process = {p.corner.name for p in points}
+    mos_sections = {p.corner.section("mos") for p in points}
+    mimcap_sections = {p.mimcap for p in points}
 
     required_temps = {round(t, 6) for t in DEFAULT_TEMPERATURES_C}
+    required_mimcaps = set(DEFAULT_MIMCAP_SECTIONS)
     nominal = tb.nominal_supply_v
     required_supplies = {
         round(nominal * (1.0 - DEFAULT_SUPPLY_TOLERANCE), 6),
@@ -559,11 +571,27 @@ def matrix_conformance(tb: Testbench, points) -> dict:
         missing.append(
             "supply: missing " + ", ".join(f"{v:.2f} V" for v in sorted(required_supplies - supplies))
         )
-    if len(process) < MIN_PROCESS_CORNERS:
+    if len(mos_sections) < MIN_PROCESS_CORNERS:
         missing.append(
-            f"process: only {len(process)} corner(s) ({', '.join(sorted(process))}); "
+            f"process: only {len(mos_sections)} MOS corner(s) ({', '.join(sorted(mos_sections))}); "
             f"at least {MIN_PROCESS_CORNERS} expected"
         )
+    if not required_mimcaps <= mimcap_sections:
+        missing.append(
+            "mimcap: missing " + ", ".join(sorted(required_mimcaps - mimcap_sections))
+        )
+    else:
+        observed_pairs = {(p.corner.section("mos"), p.mimcap) for p in points}
+        expected_pairs = {(m, c) for m in mos_sections for c in (required_mimcaps | mimcap_sections)}
+        missing_pairs = sorted(expected_pairs - observed_pairs)
+        if missing_pairs:
+            shown_pairs = ", ".join(f"{m}/{c}" for m, c in missing_pairs[:COVERAGE_SAMPLE_LIMIT])
+            more_pairs = len(missing_pairs) - len(missing_pairs[:COVERAGE_SAMPLE_LIMIT])
+            missing.append(
+                f"mimcap: {len(missing_pairs)} of {len(expected_pairs)} "
+                f"MOS/MIM-cap combinations absent (e.g. {shown_pairs}"
+                + (f", and {more_pairs} more" if more_pairs > 0 else "") + ")"
+            )
 
     # Tuple coverage: every observed process must appear at every required
     # temperature/supply, and the observed axes must form a full Cartesian
@@ -674,8 +702,12 @@ def build_record(
         if point.corner.name not in seen:
             seen.add(point.corner.name)
             corners.append(
-                {"name": point.corner.name, "sections": list(point.corner.sections),
-                 "description": point.corner.description}
+                {
+                    "name": point.corner.name,
+                    "sections": list(point.corner.sections),
+                    "mimcap": point.mimcap,
+                    "description": point.corner.description,
+                }
             )
 
     return {
@@ -694,6 +726,7 @@ def build_record(
         "evidence": extensions.as_dict(),
         "grid": {
             "corners": corners,
+            "mimcap_corners": sorted({p.mimcap for p in points}),
             "temperatures_c": sorted({p.temp_c for p in points}),
             "supplies_v": sorted({p.vdd for p in points}),
             "points": len(points),
@@ -727,12 +760,15 @@ def _fmt(value) -> str:
 def describe_failure(failure: dict) -> str:
     axis = failure.get("axis")
     where = f" on the {axis} axis" if axis else ""
+    at = failure.get("at")
+    mimcap = failure.get("mimcap")
+    loc = f" at {at} ({mimcap})" if (at and mimcap) else (f" at {at}" if (at and not axis) else "")
     note = failure.get("note")
     if note:
         return f"{failure['measurement']} {failure['kind']}{where}: {note}"
     return (
         f"{failure['measurement']} {failure['kind']}{where}="
-        f"{_fmt(failure['limit'])} (got {_fmt(failure['value'])})"
+        f"{_fmt(failure['limit'])} (got {_fmt(failure['value'])}{loc})"
     )
 
 
@@ -808,9 +844,16 @@ def render_markdown(record: dict) -> str:
     if record["statistical_convention"]:
         lines.append(f"- **Statistical convention**: {record['statistical_convention']}")
     grid = record["grid"]
+    mimcap_corners = grid.get("mimcap_corners") or sorted(
+        {c["mimcap"] for c in grid["corners"] if c.get("mimcap")}
+    )
     lines += [
         "- **Corner matrix run**:",
         "  - Process: " + ", ".join(c["name"] for c in grid["corners"]),
+    ]
+    if mimcap_corners:
+        lines.append("  - MIM cap: " + ", ".join(mimcap_corners))
+    lines += [
         "  - Temperature: " + ", ".join(f"{t:g} C" for t in grid["temperatures_c"]),
         "  - Supply: " + ", ".join(f"{v:.2f} V" for v in grid["supplies_v"]),
         f"  - Requested matrix coverage: {grid['points']} points requested",
@@ -881,7 +924,8 @@ def render_markdown(record: dict) -> str:
                                  + (f", and {more} more" if more > 0 else ""))
             lines.append("")
         for point in bad:
-            line = f"- `{point['corner_id']}` {point['status']}"
+            mim = f" (mimcap={point['mimcap']})" if point.get("mimcap") else ""
+            line = f"- `{point['corner_id']}`{mim} {point['status']}"
             if point.get("message"):
                 line += f": {point['message']}"
             lines.append(line)
@@ -912,7 +956,8 @@ def render_markdown(record: dict) -> str:
             "",
         ]
         for point in record.get("points", []):
-            line = (f"- `{point['corner_id']}` {point['status']}: "
+            mim = f" (mimcap={point['mimcap']})" if point.get("mimcap") else ""
+            line = (f"- `{point['corner_id']}`{mim} {point['status']}: "
                     f"log `{point['log']}`, deck `{point['deck']}`")
             if point.get("message"):
                 line += f" — {point['message']}"
@@ -923,9 +968,11 @@ def render_markdown(record: dict) -> str:
         if stats.get("n", 0) == 0:
             lines.append(f"- `{name}`: no successful measurements")
             continue
+        min_mim = f", {stats['min_mimcap']}" if stats.get("min_mimcap") else ""
+        max_mim = f", {stats['max_mimcap']}" if stats.get("max_mimcap") else ""
         lines.append(
-            f"- `{name}`: min {_fmt(stats['min'])} (@{stats['min_at']}), "
-            f"max {_fmt(stats['max'])} (@{stats['max_at']}), "
+            f"- `{name}`: min {_fmt(stats['min'])} (@{stats['min_at']}{min_mim}), "
+            f"max {_fmt(stats['max'])} (@{stats['max_at']}{max_mim}), "
             f"mean {_fmt(stats['mean'])}, spread {_fmt(stats['spread_pct'])}%"
         )
 

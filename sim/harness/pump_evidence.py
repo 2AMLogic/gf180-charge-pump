@@ -35,8 +35,15 @@ def load_ma(name: str) -> int:
 
 
 def output_lines(point: dict, measurements: dict[str, float]) -> list[str]:
-    """``Vout <v> V at <load> mA, <corner> <T> C <vdd> V`` for each Vout measurement."""
-    where = f"{point['process']} {point['temp_c']:g} C {point['vdd']:g} V"
+    """``<name>: <v> V at <load> mA load, <corner> [<mimcap>] <T> C <vdd> V``."""
+    proc = point.get("process", point.get("corner"))
+    if proc is None:
+        raise KeyError("point must carry 'process' or 'corner'")
+    mimcap = point.get("mimcap")
+    if mimcap and mimcap not in proc:
+        where = f"{proc} {mimcap} {point['temp_c']:g} C {point['vdd']:g} V"
+    else:
+        where = f"{proc} {point['temp_c']:g} C {point['vdd']:g} V"
     return [
         f"{name}: {value:.4g} V at {load_ma(name)} mA load, {where}"
         for name, value in measurements.items() if _VOUT.match(name)
