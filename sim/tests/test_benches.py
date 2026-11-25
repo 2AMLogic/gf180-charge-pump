@@ -212,6 +212,7 @@ class ScopeRuleInRecords(unittest.TestCase):
         (x,) = a["scope"]["output_lines"]
         self.assertIn("10 mA load", x["line"])
         self.assertIn("25 C 3.3 V", x["line"])
+        self.assertIn("mimcap_typical", x["line"])
 
     def test_unloaded_vout_fails_record(self):
         a = self._run(["vout_noload_v"], {}, {"vout_noload_v": 6.0})
