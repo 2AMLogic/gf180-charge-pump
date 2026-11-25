@@ -10,6 +10,10 @@ _None yet._
 
 ### 2026-11-25
 
+- **PR #42**: docs: index sim/records/ in sim/README.md
+- **Issue #39** (closed): sim/README.md does not index the new sim/records/ evidence directory
+- **PR #35**: fix: always emit the Scope rule heading in rendered records
+- **Issue #28** (closed): render_lines can no longer return an empty list, leaving a dead guard and an unconditional Scope-rule heading
 - **PR #37**: docs: record ngspice 45.2 vs 47 sim-tests outcome comparison
 - **Issue #33** (closed): sim gate runs ngspice-45.2 while recorded evidence is ngspice-47: sensitivity unmeasured
 - **PR #38**: fix: use PvtPoint.as_dict() for Vout scope lines so mimcap tag is recorded
