@@ -47,6 +47,7 @@ from .corners import (
     DEFAULT_SUPPLY_TOLERANCE,
     DEFAULT_TEMPERATURES_C,
 )
+from . import pump_evidence
 from .evidence import BaseExtensions
 from .pdk import Pdk
 from .runner import PointResult
@@ -635,6 +636,12 @@ def analyze_results(
     failures = evaluate_checks(
         tb.checks, results, summary, sensitivity, allow_unswept_axes=allow_unswept_axes
     )
+    # Block scope rule: Vout lines state load and corner, and a negative stress
+    # margin fails the run regardless of the bench's own .measure checks.
+    scope = pump_evidence.evaluate(tb.checks, measure_names, results)
+    seen = {(f["measurement"], f["at"]) for f in failures if f["kind"] == "max"}
+    failures += [f for f in scope["failures"]
+                 if not (f["kind"] == "stress_margin" and (f["measurement"], f["at"]) in seen)]
     # Reconcile before any verdict: limit checks skip absent points, so a
     # short/duplicated/foreign result list would otherwise pass vacuously.
     reconciliation = reconcile_results(points, results)
@@ -642,6 +649,7 @@ def analyze_results(
         "summary": summary,
         "sensitivity": sensitivity,
         "failures": failures,
+        "scope": {"output_lines": scope["output_lines"], "stress": scope["stress"]},
         "reconciliation": reconciliation,
         "n_ok": sum(1 for r in results if r.status == "ok"),
     }
@@ -728,6 +736,7 @@ def build_record(
         "reconciliation": analysis["reconciliation"],
         "measure": dict(tb.measure),
         "checks": {"spec": tb.checks, "passed": not failures, "failures": failures},
+        "scope": analysis["scope"],
         "summary": analysis["summary"],
         "sensitivity": analysis["sensitivity"],
         "evidence_dir": (
@@ -875,6 +884,10 @@ def render_markdown(record: dict) -> str:
 
     lines += ["", "## Evidence"]
     lines += record.get("_evidence_lines", []) or ["- (no extension fields)"]
+    scope_lines = pump_evidence.render_lines(
+        record.get("scope") or {"output_lines": [], "stress": []})
+    if scope_lines:
+        lines += ["", "## Scope rule (output under load, device stress)"] + scope_lines
 
     lines += ["", "## Result"]
     # The overall verdict follows the record's own status (build_record), never

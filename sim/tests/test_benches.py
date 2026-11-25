@@ -123,5 +123,43 @@ class StressNegativeControl(unittest.TestCase):
         self.assertTrue(bad["failures"])
 
 
+class ScopeRuleInRecords(unittest.TestCase):
+    """The scope rule is enforced in the report path, not only on hand-built inputs."""
+
+    def _run(self, measure, checks, values):
+        from harness.runner import PointResult
+        tb = copy.deepcopy(testbench.load(SIM / "startup" / "testbench"))
+        tb.measure, tb.checks = dict.fromkeys(measure, "x"), checks
+        pt = corners.build_grid(corners.resolve_corners(["mos"]), [25.0], [3.3])[0]
+        res = PointResult(point=pt, status="ok", measurements=values)
+        return report.analyze_results(tb, [pt], [res], allow_unswept_axes=True)
+
+    def test_vout_line_states_load_and_corner(self):
+        a = self._run(["vout_at_10ma_v"], {}, {"vout_at_10ma_v": 4.8})
+        (x,) = a["scope"]["output_lines"]
+        self.assertIn("10 mA load", x["line"])
+        self.assertIn("25 C 3.3 V", x["line"])
+
+    def test_unloaded_vout_fails_record(self):
+        a = self._run(["vout_noload_v"], {}, {"vout_noload_v": 6.0})
+        self.assertEqual([f["kind"] for f in a["failures"]], ["unloaded_vout"])
+        self.assertEqual(a["scope"]["output_lines"], [])
+
+    def test_negative_stress_margin_fails_record(self):
+        chk = {"stress_a_vds_v": {"max": 6.0}}
+        a = self._run(["stress_a_vds_v"], chk, {"stress_a_vds_v": 6.5})
+        self.assertEqual([f["kind"] for f in a["failures"]], ["max"])  # not double-counted
+        self.assertEqual(a["scope"]["stress"][0]["violations"], ["stress_a_vds_v"])
+        # No bench max check: the scope rule still refuses a verdict.
+        b = self._run(["stress_a_vds_v"], {}, {"stress_a_vds_v": 1.0})
+        self.assertEqual([f["kind"] for f in b["failures"]], ["stress_unrated"])
+
+    def test_inside_rating_passes_with_margin_reported(self):
+        chk = {"stress_a_vds_v": {"max": 6.0}}
+        a = self._run(["stress_a_vds_v"], chk, {"stress_a_vds_v": 5.0})
+        self.assertEqual(a["failures"], [])
+        self.assertAlmostEqual(a["scope"]["stress"][0]["worst_margin_v"], 1.0)
+
+
 if __name__ == "__main__":
     unittest.main()
