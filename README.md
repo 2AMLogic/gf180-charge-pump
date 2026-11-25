@@ -72,7 +72,7 @@ using gf180mcu, not just this repo.
 | Enable to output within spec | ≤ 10 µs | ≤ 2 µs |
 | Output ripple at full load | ≤ 100 mV p-p | ≤ 25 mV p-p |
 | Device stress | no device exceeds its rated Vds / Vgs / Vdb at any corner, transient included | — |
-| Core area (footprint including all capacitors) | ≤ 0.50 mm² (draft 0.25 mm²; see record §3) | not committed |
+| Core area (footprint including all capacitors) | ≤ 0.50 mm² (draft 0.25 mm²; see record §3) | ≤ 0.10 mm² |
 | PVT corners | tt/ff/ss/fs/sf × −40/25/125 °C × supply ±10% | — |
 
 The output and load rows are the program-supply assumptions of the sibling

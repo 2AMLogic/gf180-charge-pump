@@ -75,10 +75,12 @@ DRC-clean 10 V device exists and a decision record admits it.
 ### 3.0 Capacitor density and its source
 
 Source: the PDK ngspice models, `gf180mcuD/libs.tech/ngspice/sm141064.ngspice`
-(device list) and `sm141064_mim.ngspice` (parameters), pinned version
-`f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7`.
+(device list) and `sm141064_mim.ngspice` (parameters), pinned to
+`fossi-foundation/open-pdks` commit `f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7`
+(`ciel enable --pdk-family gf180mcu`; upstream model repository
+`efabless/globalfoundries-pdk-libs-gf180mcu_fd_pr`).
 
-- `cap_mim_2f0` (M2/M3, M3/M4 and M4/M5 variants): `c_cox = 1.99e-3 F/m²`
+- `cap_mim_2f0` (M2/M3, M3/M4, M4/M5 and M5/M6 variants): `c_cox = 1.99e-3 F/m²`
   × `mim_corner_2p0ff`, i.e. **1.99 fF/µm²** typical. The corner multiplier is
   0.90 (ff) to 1.10 (ss), so the **minimum is 0.9 × 1.99 = 1.79 fF/µm²**. The
   sizing below uses 1.79 fF/µm² for area and requires C at the −10% corner.
@@ -89,10 +91,14 @@ Source: the PDK ngspice models, `gf180mcuD/libs.tech/ngspice/sm141064.ngspice`
   this is respected; the cap's bottom-plate parasitic to substrate is a
   layout item for the topology record.
 - MOS capacitors (`cap_nmos_06v0`): C is bias-dependent,
-  `c = A·(0.001107 + 0.00107·tanh(6.25·V − 4.1875))` F/m² per the model, so
-  about 1.1 fF/µm² at low bias and 2.2 fF/µm² in strong inversion. It is no
-  denser than MIM, so it is not used for sizing; it stays available for
-  decoupling.
+  `c = A·(0.001107 + 0.00107·tanh(6.25·V − 4.1875))` F/m² per the model —
+  **0.04 fF/µm² at V = 0 V** (0.0375 fF/µm²), **1.11 fF/µm² at the V = 0.67 V
+  midpoint**, and **2.18 fF/µm² in strong inversion** (about 10% above
+  `cap_mim_2f0` typical). Because capacitance drops nearly 60× between strong
+  inversion and 0 V — a rail-to-rail swing spends much of its excursion near
+  the 0.04 fF/µm² end, and startup begins at 0 V — while strong inversion gains
+  only ~10% over MIM, it is not used for sizing; it stays available for
+  DC-biased decoupling.
 
 MIM capacitors sit in upper metal and could in principle be stacked over
 circuitry. S7 counts the footprint of everything, with no credit for stacking
@@ -136,9 +142,13 @@ Reading:
 - Enable-to-output (S4): charging C_out of about 0.6 nF to 4.5 V takes about
   2.7 nC, negligible against a 10 µs budget at tens of mA; S4 is not the
   binding row.
-- The ripple row is the second lever: 200 mV ripple would halve C_out and
-  bring 100 MHz to about 0.23 mm². The EE review may choose this instead of
-  moving S7.
+- The ripple row is the second lever: 200 mV ripple would halve C_out (to
+  250 pF typical, 278 pF corner) and bring total capacitor area at 100 MHz to
+  **0.217 mm²**. Against the 0.25 mm² draft row that leaves only **0.033 mm²**
+  for switches, oscillator, drivers, clamp and routing — about 4× less headroom
+  than the **0.14 mm²** left under S7 = 0.50 mm² at 100 mV ripple — so relaxing
+  ripple to 200 mV alone still leaves little margin inside 0.25 mm² once
+  overhead is counted.
 
 ### 3.2 Pulsed bootstrap / charge-reservoir candidate
 
@@ -171,11 +181,12 @@ Reading:
 
 ## 4. Device ceiling and stress arguments
 
-Ceiling: `nfet_06v0` and `pfet_06v0`, rated 6.0 V on Vds, Vgs and Vdb (the 6 V
-class named in the PDK device list). The PDK's per-terminal rating table is
-not reproduced in this record; the device-stress bench (#2) must take the
-limits from the PDK documentation and check every node, transients included.
-**This is an open item, not a verified rating.**
+Ceiling: `nfet_06v0` and `pfet_06v0`, treated here as 6.0 V on Vds, Vgs and Vdb
+(inferred from the 6.0 V device class named in the PDK device list; per-terminal
+Vds/Vgs/Vdb limits are **not** in the model files). The PDK's per-terminal
+rating table is not reproduced in this record; the device-stress bench (#2) must
+take the limits from the PDK documentation and check every node, transients
+included. **This is an open item, not a verified rating.**
 
 - The output upper bound S2/S8 (5.5 V) is set so no 6.0 V device on the output
   net exceeds its rating with 0.5 V of margin; margin policy for internal
