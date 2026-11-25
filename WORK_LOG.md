@@ -10,6 +10,10 @@ _None yet._
 
 ### 2026-11-25
 
+- **Issue #27** (closed): sim-tests CI pins the PDK revision but floats ngspice and ciel versions
+- **PR #30**: ci: pin ciel and document floating ngspice in sim-tests
+- **Issue #17** (closed): Scope-rule record section is silent on device stress for a bench with no stress_* measurements
+- **PR #23**: feat: state absence of device-stress measurements in scope section
 - **PR #26**: ci: run sim/tests in CI and fail instead of skip when the simulator is missing
 - **Issue #21** (closed): No CI workflow runs the sim test suite — 'CI green' in this repo means CodeQL only
 - **PR #25**: test: cover render_markdown MIM-corner UNVERIFIED tag
