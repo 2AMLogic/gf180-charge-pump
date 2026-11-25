@@ -123,6 +123,37 @@ class StressNegativeControl(unittest.TestCase):
         self.assertTrue(bad["failures"])
 
 
+class RenderLinesSummary(unittest.TestCase):
+    def _scope(self, n):
+        ol = []
+        for i in range(n):
+            at = f"c{i}"
+            for name in ("vout_at_10ma_a_v", "vout_at_10ma_b_v"):
+                v = 4.0 + i * 0.1
+                ol.append({"at": at, "name": name, "value": v,
+                           "line": f"{name}: {v:.4g} V at 10 mA load, {at} 25 C 3.3 V"})
+        return {"output_lines": ol, "stress": []}
+
+    def test_summarized_not_enumerated(self):
+        scope = self._scope(135)
+        before = copy.deepcopy(scope)
+        out = pump_evidence.render_lines(scope)
+        self.assertEqual(scope, before)
+        self.assertLessEqual(len(out), 8)
+        text = "\n".join(out)
+        self.assertIn("Min `vout_at_10ma_a_v`: c0", text)
+        self.assertIn("Max `vout_at_10ma_a_v`: c134", text)
+        self.assertIn("10 mA load", text)
+        self.assertIn("135 of 135 completed points", text)
+        self.assertIn("JSON record", text)
+
+    def test_single_point_and_empty(self):
+        out = pump_evidence.render_lines(self._scope(1))
+        self.assertIn("Min `vout_at_10ma_a_v`: c0", "\n".join(out))
+        self.assertIn("Max `vout_at_10ma_a_v`: c0", "\n".join(out))
+        self.assertEqual(pump_evidence.render_lines({"output_lines": [], "stress": []}), [])
+
+
 class ScopeRuleInRecords(unittest.TestCase):
     """The scope rule is enforced in the report path, not only on hand-built inputs."""
 
