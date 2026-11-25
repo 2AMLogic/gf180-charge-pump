@@ -1,0 +1,28 @@
+{
+  "name": "charge-pump-startup",
+  "netlist": "netlist.spice",
+  "netlist_provenance": "schematic",
+  "nominal_supply_v": 3.3,
+  "supply_tolerance": 0.1,
+  "temperatures_c": [
+    -40.0,
+    25.0,
+    125.0
+  ],
+  "corners": [
+    "mos"
+  ],
+  "description": "Enable-to-4.5 V time at 10 mA load per PVT point. A pump that never reaches the threshold measures 1 s and fails.",
+  "claim": "Output reaches 4.5 V within 100 us of enable at every PVT point.",
+  "analyses": [
+    "tran 1n 200u 0 1n"
+  ],
+  "measure": {
+    "startup_to_4500mv_at_10ma_s": "minimum(time+(1-(v(vout)>4.5))*1)-1u"
+  },
+  "checks": {
+    "startup_to_4500mv_at_10ma_s": {
+      "max": 0.0001
+    }
+  }
+}

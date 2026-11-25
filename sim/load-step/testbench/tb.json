@@ -1,0 +1,37 @@
+{
+  "name": "charge-pump-load-step",
+  "netlist": "netlist.spice",
+  "netlist_provenance": "schematic",
+  "nominal_supply_v": 3.3,
+  "supply_tolerance": 0.1,
+  "temperatures_c": [
+    -40.0,
+    25.0,
+    125.0
+  ],
+  "corners": [
+    "mos"
+  ],
+  "description": "Vout after a 10 us step to 10 mA, min over the transient and settled mean; peak Vds of the output devices during the step.",
+  "claim": "Vout never leaves 5.0V+/-10% through a step to 10 mA.",
+  "analyses": [
+    "tran 1n 80u 0 1n"
+  ],
+  "measure": {
+    "vout_step_to_10ma_post_mean_v": "mean(((time>60u)&(time<80u))*v(vout))/mean(((time>60u)&(time<80u)))",
+    "vout_step_to_10ma_post_min_v": "-maximum(-((time>50u)&(time<80u))*v(vout)-(1-((time>50u)&(time<80u)))*1e3)",
+    "vout_step_to_10ma_post_max_v": "maximum(((time>50u)&(time<80u))*v(vout)-(1-((time>50u)&(time<80u)))*1e3)",
+    "vds_peak_pmos_during_step_v": "maximum(((time>40u)&(time<80u))*abs(v(xdut.a)-v(vout))-(1-((time>40u)&(time<80u)))*1e3)"
+  },
+  "checks": {
+    "vout_step_to_10ma_post_min_v": {
+      "min": 4.5
+    },
+    "vout_step_to_10ma_post_max_v": {
+      "max": 5.5
+    },
+    "vds_peak_pmos_during_step_v": {
+      "max": 6.5
+    }
+  }
+}
