@@ -1,0 +1,42 @@
+{
+  "name": "charge-pump-load",
+  "netlist": "netlist.spice",
+  "netlist_provenance": "schematic",
+  "nominal_supply_v": 3.3,
+  "supply_tolerance": 0.1,
+  "temperatures_c": [
+    -40.0,
+    25.0,
+    125.0
+  ],
+  "corners": [
+    "mos_mimcap"
+  ],
+  "description": "Steady Vout and ripple into a 450 ohm resistive load (10 mA at 4.5 V), reported per corner. No unloaded figure is measured.",
+  "claim": "Vout stays within 5.0V+/-10% at >= 10 mA at every PVT point.",
+  "analyses": [
+    "tran 1n 210u 0 1n"
+  ],
+  "measure": {
+    "vout_at_10ma_resistive_mean_v": "mean(((time>200u)&(time<210u))*v(vout))/mean(((time>200u)&(time<210u)))",
+    "vout_at_10ma_resistive_min_v": "-maximum(-((time>200u)&(time<210u))*v(vout)-(1-((time>200u)&(time<210u)))*1e3)",
+    "vout_at_10ma_resistive_max_v": "maximum(((time>200u)&(time<210u))*v(vout)-(1-((time>200u)&(time<210u)))*1e3)",
+    "ripple_at_10ma_resistive_pp_v": "maximum(((time>200u)&(time<210u))*v(vout)-(1-((time>200u)&(time<210u)))*1e3)-(-maximum(-((time>200u)&(time<210u))*v(vout)-(1-((time>200u)&(time<210u)))*1e3))",
+    "iload_10ma_resistive_mean_a": "mean(((time>200u)&(time<210u))*v(vout))/mean(((time>200u)&(time<210u)))/450",
+    "iload_10ma_resistive_min_a": "-maximum(-((time>200u)&(time<210u))*v(vout)-(1-((time>200u)&(time<210u)))*1e3)/450"
+  },
+  "checks": {
+    "vout_at_10ma_resistive_min_v": {
+      "min": 4.5
+    },
+    "vout_at_10ma_resistive_max_v": {
+      "max": 5.5
+    },
+    "ripple_at_10ma_resistive_pp_v": {
+      "max": 0.25
+    },
+    "iload_10ma_resistive_min_a": {
+      "min": 0.01
+    }
+  }
+}

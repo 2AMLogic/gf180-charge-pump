@@ -43,15 +43,35 @@ from dataclasses import dataclass, field
 # Default PVT axes. A block's own CLAUDE.md / spec should state its PVT
 # requirement explicitly; these are reasonable open-PDK defaults to start
 # from, not a substitute for that statement.
-DEFAULT_TEMPERATURES_C: tuple[float, ...] = (-40.0, 27.0, 125.0)
+# gf180-charge-pump (issue #2): the block states -40/25/125 C, so the core's
+# generic 27 C middle point is replaced here (report.matrix_conformance reads
+# this same constant, so the mandated-matrix check follows the block's PVT
+# statement instead of silently demanding 27 C as well).
+DEFAULT_TEMPERATURES_C: tuple[float, ...] = (-40.0, 25.0, 125.0)
 DEFAULT_SUPPLY_TOLERANCE: float = 0.10  # +/-10 %
 DEFAULT_NOMINAL_SUPPLY_V: float = 3.3   # gf180mcu 3.3 V core supply (pump input)
 
 #: Device families in the order their ``.lib`` sections are included in the
-#: generated deck (see runner.compose_deck). The generic core sweeps only
-#: "mos" by default; a block adds families (and per-corner sections for them)
-#: as it needs them.
-FAMILIES: tuple[str, ...] = ("mos",)
+#: generated deck (see runner.compose_deck). gf180-charge-pump (issue #7)
+#: sweeps both MOS and MIM flying-capacitor corners so loaded-output claims
+#: cover the PDK's +/-10 % Cfly variation.
+FAMILIES: tuple[str, ...] = ("mos", "mimcap")
+
+#: gf180mcu MIM capacitor process sections in ``sm141064.ngspice``.
+#: Note the PDK's digital RC-delay polarity (lines 490-518): ``mimcap_ss``
+#: raises density (+10 %, ``mim_corner_1p0ff=1.1``) and ``mimcap_ff`` lowers
+#: it (-10 %, ``mim_corner_1p0ff=0.9`` -- minimum flying capacitance).
+DEFAULT_MIMCAP_SECTIONS: tuple[str, ...] = (
+    "mimcap_typical",
+    "mimcap_ss",
+    "mimcap_ff",
+)
+
+_MIMCAP_DESCRIPTIONS: dict[str, str] = {
+    "mimcap_typical": "typical MIM cap (1.0x)",
+    "mimcap_ss": "high MIM cap (+10%, mim_corner_1p0ff=1.1)",
+    "mimcap_ff": "low MIM cap (-10%, mim_corner_1p0ff=0.9)",
+}
 
 
 @dataclass(frozen=True)
@@ -63,26 +83,31 @@ class Corner:
     sections: tuple[str, ...]
     description: str = ""
 
+    def section(self, family: str) -> str:
+        """Return the ``.lib`` section name for ``family`` (e.g. ``"mimcap"``)."""
+        return self.sections[FAMILIES.index(family)]
 
-#: The classic five MOS corners. Section names match FAMILIES = ("mos",);
-#: most open PDKs use exactly these strings as their `.lib` section names --
-#: if this PDK's model library uses different ones, edit the tuples below
-#: rather than the surrounding mechanics.
+
+#: The classic five MOS corners paired with ``mimcap_typical`` so every entry
+#: carries one section per family in :data:`FAMILIES` (and ``CORNERS["tt"]``
+#: supplies the typical sections for :func:`sabotage` and single-point probes).
 CORNERS: dict[str, Corner] = {
-    "tt": Corner("tt", ("tt",), "typical NMOS / typical PMOS"),
-    "ff": Corner("ff", ("ff",), "fast NMOS / fast PMOS"),
-    "ss": Corner("ss", ("ss",), "slow NMOS / slow PMOS"),
-    "fs": Corner("fs", ("fs",), "fast NMOS / slow PMOS"),
-    "sf": Corner("sf", ("sf",), "slow NMOS / fast PMOS"),
+    # gf180mcu's sm141064.ngspice names the typical section ``typical`` (there is
+    # no ``tt`` section); ff/ss/fs/sf match the PDK file. Checked 2026-11-25.
+    "tt": Corner("tt", ("typical", "mimcap_typical"), "typical NMOS / typical PMOS, typical MIM cap"),
+    "ff": Corner("ff", ("ff", "mimcap_typical"), "fast NMOS / fast PMOS, typical MIM cap"),
+    "ss": Corner("ss", ("ss", "mimcap_typical"), "slow NMOS / slow PMOS, typical MIM cap"),
+    "fs": Corner("fs", ("fs", "mimcap_typical"), "fast NMOS / slow PMOS, typical MIM cap"),
+    "sf": Corner("sf", ("sf", "mimcap_typical"), "slow NMOS / fast PMOS, typical MIM cap"),
 }
 
 CORNER_SETS: dict[str, tuple[str, ...]] = {
     # Minimum bar for a quick smoke run. Not a valid evidence matrix on its own.
     "tt": ("tt",),
-    # The five classic MOS corners -- the default.
+    # The five classic MOS corners at typical MIM cap (subset -- does not sweep Cfly).
     "mos": ("tt", "ff", "ss", "fs", "sf"),
 }
-DEFAULT_CORNER_SET = "mos"
+DEFAULT_CORNER_SET = "mos_mimcap"
 
 
 def register_corner(
@@ -111,6 +136,22 @@ def register_corner_set(name: str, corner_names: tuple[str, ...]) -> None:
     if unknown:
         raise KeyError(f"corner set {name!r} references unknown corner(s): {unknown}")
     CORNER_SETS[name] = tuple(corner_names)
+
+
+# Register the full MOS x MIM-cap cross product (5 x 3 = 15 corners) through
+# the standard extension point so the default PVT grid covers 45 x 3 = 135
+# points (issue #7).
+for _mos_name in CORNER_SETS["mos"]:
+    _mos_corner = CORNERS[_mos_name]
+    _mos_section = _mos_corner.section("mos")
+    _mos_desc = _mos_corner.description.split(",")[0]
+    for _mim_section in DEFAULT_MIMCAP_SECTIONS:
+        register_corner(
+            f"{_mos_name}_{_mim_section}",
+            (_mos_section, _mim_section),
+            f"{_mos_desc} / {_MIMCAP_DESCRIPTIONS[_mim_section]}",
+            sets=("mos_mimcap",),
+        )
 
 
 class CornerSelectionError(KeyError, ValueError):
@@ -279,10 +320,16 @@ class PvtPoint:
         """
         return f"{self.corner.name}_{self.temp_c:g}c_{_format_supply(self.vdd)}v"
 
+    @property
+    def mimcap(self) -> str:
+        """MIM capacitor corner section for this point (e.g. ``"mimcap_ss"``)."""
+        return self.corner.section("mimcap")
+
     def as_dict(self) -> dict:
         return {
             "corner": self.corner.name,
             "corner_sections": list(self.corner.sections),
+            "mimcap": self.mimcap,
             "temp_c": self.temp_c,
             "vdd": self.vdd,
             "corner_id": self.corner_id,

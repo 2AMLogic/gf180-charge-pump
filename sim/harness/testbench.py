@@ -419,7 +419,7 @@ def _manifest_params(manifest: dict, path: Path) -> dict:
 
 
 #: Axis names accepted by the per-axis sensitivity checks.
-AXES = ("process", "temperature", "supply")
+AXES = ("process", "temperature", "supply", "mimcap")
 
 PROVENANCE_RULE = (
     "netlist_provenance must be 'schematic', 'schematic (<detail>)' or start with "

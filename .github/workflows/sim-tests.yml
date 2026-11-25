@@ -1,0 +1,46 @@
+name: sim-tests
+
+# Runs the full sim/tests suite so a green PR badge says something about the
+# testbenches, not only CodeQL. REQUIRE_SIM=1 makes a missing ngspice/PDK a
+# failure instead of a skip.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sim-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      REQUIRE_SIM: "1"
+      PDK_ROOT: ${{ github.workspace }}/.pdk
+      # open_pdks revision the committed evidence was produced with
+      OPEN_PDKS_REV: f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install ngspice
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ngspice
+          ngspice --version | head -3
+      - name: Install gf180mcu PDK
+        run: |
+          python3 -m pip install ciel
+          ciel enable --pdk-family gf180mcu "$OPEN_PDKS_REV"
+          ls "$PDK_ROOT"
+      - name: Run sim tests
+        run: |
+          set -o pipefail
+          python3 -m unittest discover -s sim/tests -t . -v 2>&1 | tee test.log
+      - name: Fail on skipped tests
+        run: |
+          if grep -Eq '^(OK|FAILED) .*skipped=' test.log; then echo "tests were skipped"; exit 1; fi
