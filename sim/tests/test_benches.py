@@ -26,7 +26,7 @@ class Manifests(unittest.TestCase):
             self.assertEqual(tb.nominal_supply_v, 3.3)
             self.assertEqual(tb.supply_tolerance, 0.10)
             self.assertEqual(tuple(tb.temperatures_c), (-40.0, 25.0, 125.0))
-            self.assertEqual(tuple(tb.corners), ("mos",))
+            self.assertEqual(tuple(tb.corners), ("mos_mimcap",))
             self.assertTrue(tb.checks)
 
     def test_corner_set_is_pdk_sections(self):
@@ -36,9 +36,9 @@ class Manifests(unittest.TestCase):
     def test_full_matrix_conformance(self):
         tb = testbench.load(SIM / "startup" / "testbench")
         pts = corners.build_grid(
-            corners.resolve_corners(["mos"]), tb.temperatures_c,
+            corners.resolve_corners(tb.corners), tb.temperatures_c,
             corners.supply_points(tb.nominal_supply_v, tb.supply_tolerance))
-        self.assertEqual(len(pts), 45)
+        self.assertEqual(len(pts), 135)
         self.assertTrue(report.matrix_conformance(tb, pts)["full"])
 
     def test_committed_files_match_generator(self):

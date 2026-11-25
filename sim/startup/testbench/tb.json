@@ -10,7 +10,7 @@
     125.0
   ],
   "corners": [
-    "mos"
+    "mos_mimcap"
   ],
   "description": "Enable-to-4.5 V time at 10 mA load per PVT point. A pump that never reaches the threshold measures 1 s and fails.",
   "claim": "Output reaches 4.5 V within 100 us of enable at every PVT point.",
