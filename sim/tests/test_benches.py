@@ -5,6 +5,7 @@ SIM = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SIM))
 sys.path.insert(0, str(SIM / "benches"))
 from harness import corners, pdk, pump_evidence, report, testbench  # noqa: E402
+from harness.simgate import requires_sim  # noqa: E402
 import generate  # noqa: E402
 import single_point  # noqa: E402
 
@@ -98,7 +99,7 @@ class StressNegativeControl(unittest.TestCase):
         text = (SIM / "load-step" / "testbench" / "netlist.spice").read_text()
         self.assertIn(f".param tstep={generate.us(generate.T_SETTLE_S)}", text)
 
-    @unittest.skipUnless(_can_simulate(), "needs ngspice and the gf180mcu PDK")
+    @requires_sim(_can_simulate)
     def test_lowered_limit_fails_and_real_limit_passes(self):
         tb, res = single_point.run("device-stress")
         self.assertEqual(res.status, "ok", res.message)
@@ -112,7 +113,7 @@ class StressNegativeControl(unittest.TestCase):
         self.assertEqual(len(bad["failures"]), sum(x > 0.1 for x in res.measurements.values()))
         self.assertGreater(len(bad["failures"]), 0)
 
-    @unittest.skipUnless(_can_simulate(), "needs ngspice and the gf180mcu PDK")
+    @requires_sim(_can_simulate)
     def test_overstressed_dut_fails(self):
         """A DUT run at 2x supply must violate the real 6.0 V rating."""
         tb, res = single_point.run("device-stress", vdd=7.0)

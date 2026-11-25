@@ -51,6 +51,14 @@ Deliberately **not** being built yet:
   clocking and output-voltage limiting. Tight regulation and a programmable
   output are stretch rows.
 
+## CI
+
+The `sim-tests` workflow runs the whole `sim/tests` suite with ngspice and the
+gf180mcu PDK installed and `REQUIRE_SIM=1`, so a missing simulator fails the
+check instead of skipping. CodeQL green alone says nothing about the suite;
+look for a green `sim-tests` check. Locally, without `REQUIRE_SIM`, the
+simulator-dependent tests skip.
+
 ## Built agent-native
 
 Every specification, decision record, testbench, and line of documentation in
