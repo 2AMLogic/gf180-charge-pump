@@ -238,5 +238,37 @@ class ScopeRuleInRecords(unittest.TestCase):
         self.assertAlmostEqual(a["scope"]["stress"][0]["worst_margin_v"], 1.0)
 
 
+class ScopeHeadingAlwaysPresent(unittest.TestCase):
+    """``## Scope rule`` is emitted for every record, incl. one with no ``scope`` key (#28)."""
+
+    HEADING = "## Scope rule (output under load, device stress)"
+
+    def _md(self, scope):
+        from tests.test_mimcap_axis import MimcapMarkdownTag
+        rec = dict(MimcapMarkdownTag._record(None))
+        rec.pop("scope", None)
+        if scope is not None:
+            rec["scope"] = scope
+        return report.render_markdown(rec)
+
+    def test_no_scope_key(self):
+        md = self._md(None)
+        self.assertIn(self.HEADING, md)
+        self.assertIn(pump_evidence.NO_STRESS_LINE, md)
+
+    def test_load_only_scope(self):
+        md = self._md({"output_lines": [{"at": "c0", "name": "vout_at_10ma_v", "value": 4.8,
+                                         "line": "vout_at_10ma_v: 4.8 V at 10 mA load, c0"}],
+                       "stress": []})
+        self.assertIn(self.HEADING, md)
+        self.assertIn("Min `vout_at_10ma_v`", md)
+
+    def test_stress_only_scope(self):
+        md = self._md({"output_lines": [], "stress": [
+            {"at": "tt", "worst": "stress_a_vds_v", "worst_margin_v": 0.5, "violations": []}]})
+        self.assertIn(self.HEADING, md)
+        self.assertIn("Worst device-stress margin: 0.5 V", md)
+
+
 if __name__ == "__main__":
     unittest.main()
