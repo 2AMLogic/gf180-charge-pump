@@ -102,8 +102,11 @@ def evaluate(checks: dict, measure_names, results) -> dict:
         if r.status != "ok":
             continue
         point = {"process": r.point.corner.name, "temp_c": r.point.temp_c, "vdd": r.point.vdd}
-        for text in output_lines(point, {k: v for k, v in r.measurements.items() if k in loaded}):
-            lines.append({"at": r.point.corner_id, "line": text})
+        for k, v in r.measurements.items():
+            if k not in loaded:
+                continue
+            (text,) = output_lines(point, {k: v})
+            lines.append({"at": r.point.corner_id, "line": text, "name": k, "value": v})
         have = {k: v for k, v in r.measurements.items() if k in rated}
         if not have:
             continue
@@ -117,8 +120,31 @@ def evaluate(checks: dict, measure_names, results) -> dict:
 
 
 def render_lines(scope: dict) -> list[str]:
-    """Markdown bullets for a record's ``scope`` section."""
-    out = [f"- {x['at']}: {x['line']}" for x in scope["output_lines"]]
+    """Markdown bullets for a record's ``scope`` section.
+
+    Vout entries are summarized per measurement name (min, max, point count) so
+    the section stays O(#measurements); each bullet still names its load and
+    corner. The complete per-point list stays in ``scope["output_lines"]`` of
+    the JSON record. Entries without ``name``/``value`` (older records) are
+    listed individually.
+    """
+    entries = scope["output_lines"]
+    out: list[str] = []
+    groups: dict[str, list[dict]] = {}
+    for x in entries:
+        if "name" in x and "value" in x:
+            groups.setdefault(x["name"], []).append(x)
+        else:
+            out.append(f"- {x['at']}: {x['line']}")
+    total = len({x["at"] for x in entries})
+    for name, xs in groups.items():
+        lo = min(xs, key=lambda x: x["value"])
+        hi = max(xs, key=lambda x: x["value"])
+        out.append(f"- Min `{name}`: {lo['at']}: {lo['line']}")
+        out.append(f"- Max `{name}`: {hi['at']}: {hi['line']}")
+        out.append(f"- `{name}` covers {len(xs)} of {total} completed points")
+    if groups:
+        out.append("- Full per-point output list: `scope.output_lines` in the JSON record")
     stress = scope["stress"]
     if stress:
         worst = min(stress, key=lambda s: s["worst_margin_v"])
