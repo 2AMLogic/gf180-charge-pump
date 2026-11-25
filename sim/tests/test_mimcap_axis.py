@@ -10,6 +10,7 @@ SIM = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SIM))
 
 from harness import corners, report, runner, testbench
+from tests import test_corners_mimcap
 
 
 def _results(mim_scale: float, mos_scale: float = 0.05):
@@ -66,6 +67,37 @@ class MimcapAxis(unittest.TestCase):
         fails = report.evaluate_checks(
             {"vout": {"min_spread_pct_by_axis": {"mimcap": 0.1}}}, res, {}, sens)
         self.assertEqual([f["axis"] for f in fails], ["mimcap"])
+
+
+class MimcapMarkdownTag(unittest.TestCase):
+    """render_markdown surfaces (or omits) the MIM-corner coverage tag (issue #22)."""
+
+    TAG = "MIM-corner coverage UNVERIFIED"
+
+    @staticmethod
+    def _record(coverage):
+        helper = test_corners_mimcap.MimcapReporting("test_matrix_conformance_requires_all_mimcap_corners")
+        _, _, rec = helper._make_record(["mos_mimcap"])
+        rec = dict(rec)
+        if coverage is None:
+            rec.pop("mimcap_coverage", None)
+        else:
+            rec["mimcap_coverage"] = coverage
+        return rec
+
+    def test_unverified_record_emits_tag_and_reason(self):
+        reason = "mimcap axis flat; DUT has no MIM device"
+        md = report.render_markdown(self._record({"status": "unverified", "reason": reason}))
+        self.assertIn(f"**{self.TAG}**: {reason}.", md)
+
+    def test_verified_record_omits_tag(self):
+        md = report.render_markdown(self._record({"status": "verified", "reason": "n/a"}))
+        self.assertNotIn(self.TAG, md)
+
+    def test_legacy_record_without_coverage_renders_without_tag(self):
+        md = report.render_markdown(self._record(None))
+        self.assertNotIn(self.TAG, md)
+        self.assertIn("MIM cap:", md)
 
 
 if __name__ == "__main__":
