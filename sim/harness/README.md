@@ -219,7 +219,7 @@ selection error) than it did before.
 
 ### Recording a subset of the PVT matrix
 
-The mandated matrix is at least three process corners at -40/27/125 C and
+The mandated matrix is at least three process corners at -40/25/125 C (this repo; the generic core default was -40/27/125) and
 nominal supply +/-10 %, with every process/temperature/supply tuple present
 (`report.matrix_conformance`). A **recorded** `run` whose selected points
 fall short of that is refused — one-line `error:` naming the gaps, exit 2 —

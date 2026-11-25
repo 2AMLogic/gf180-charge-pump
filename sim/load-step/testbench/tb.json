@@ -1,0 +1,137 @@
+{
+  "name": "charge-pump-load-step",
+  "netlist": "netlist.spice",
+  "netlist_provenance": "schematic",
+  "nominal_supply_v": 3.3,
+  "supply_tolerance": 0.1,
+  "temperatures_c": [
+    -40.0,
+    25.0,
+    125.0
+  ],
+  "corners": [
+    "mos"
+  ],
+  "description": "Vout after a 10 us step to 10 mA, min over the transient and settled mean; peak Vds of the output devices during the step; every device terminal pair against its rating over the whole transient.",
+  "claim": "Vout never leaves 5.0V+/-10% through a step to 10 mA.",
+  "analyses": [
+    "tran 1n 250u 0 1n"
+  ],
+  "measure": {
+    "vout_step_to_10ma_post_mean_v": "mean(((time>230u)&(time<250u))*v(vout))/mean(((time>230u)&(time<250u)))",
+    "vout_step_to_10ma_post_min_v": "-maximum(-((time>210u)&(time<250u))*v(vout)-(1-((time>210u)&(time<250u)))*1e3)",
+    "vout_step_to_10ma_post_max_v": "maximum(((time>210u)&(time<250u))*v(vout)-(1-((time>210u)&(time<250u)))*1e3)",
+    "vds_peak_pmos_during_step_v": "maximum(((time>200u)&(time<250u))*abs(v(xdut.a)-v(vout))-(1-((time>200u)&(time<250u)))*1e3)",
+    "stress_xmn1_vds_v": "maximum(abs(v(xdut.a)-v(vin)))",
+    "stress_xmn1_vgs_v": "maximum(abs(v(xdut.b)-v(vin)))",
+    "stress_xmn1_vdb_v": "maximum(abs(v(xdut.a)-0))",
+    "stress_xmn1_vsb_v": "maximum(abs(v(vin)-0))",
+    "stress_xmn1_vgb_v": "maximum(abs(v(xdut.b)-0))",
+    "stress_xmn2_vds_v": "maximum(abs(v(xdut.b)-v(vin)))",
+    "stress_xmn2_vgs_v": "maximum(abs(v(xdut.a)-v(vin)))",
+    "stress_xmn2_vdb_v": "maximum(abs(v(xdut.b)-0))",
+    "stress_xmn2_vsb_v": "maximum(abs(v(vin)-0))",
+    "stress_xmn2_vgb_v": "maximum(abs(v(xdut.a)-0))",
+    "stress_xmp1_vds_v": "maximum(abs(v(xdut.a)-v(vout)))",
+    "stress_xmp1_vgs_v": "maximum(abs(v(xdut.b)-v(vout)))",
+    "stress_xmp1_vdb_v": "maximum(abs(v(xdut.a)-v(vout)))",
+    "stress_xmp1_vsb_v": "maximum(abs(v(vout)-v(vout)))",
+    "stress_xmp1_vgb_v": "maximum(abs(v(xdut.b)-v(vout)))",
+    "stress_xmp2_vds_v": "maximum(abs(v(xdut.b)-v(vout)))",
+    "stress_xmp2_vgs_v": "maximum(abs(v(xdut.a)-v(vout)))",
+    "stress_xmp2_vdb_v": "maximum(abs(v(xdut.b)-v(vout)))",
+    "stress_xmp2_vsb_v": "maximum(abs(v(vout)-v(vout)))",
+    "stress_xmp2_vgb_v": "maximum(abs(v(xdut.a)-v(vout)))"
+  },
+  "checks": {
+    "vout_step_to_10ma_post_min_v": {
+      "min": 4.5
+    },
+    "vout_step_to_10ma_post_max_v": {
+      "max": 5.5
+    },
+    "vds_peak_pmos_during_step_v": {
+      "max": 6.0
+    },
+    "stress_xmn1_vds_v": {
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
+    },
+    "stress_xmn1_vgs_v": {
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
+    },
+    "stress_xmn1_vdb_v": {
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
+    },
+    "stress_xmn1_vsb_v": {
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
+    },
+    "stress_xmn1_vgb_v": {
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
+    },
+    "stress_xmn2_vds_v": {
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
+    },
+    "stress_xmn2_vgs_v": {
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
+    },
+    "stress_xmn2_vdb_v": {
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
+    },
+    "stress_xmn2_vsb_v": {
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
+    },
+    "stress_xmn2_vgb_v": {
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
+    },
+    "stress_xmp1_vds_v": {
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
+    },
+    "stress_xmp1_vgs_v": {
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
+    },
+    "stress_xmp1_vdb_v": {
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
+    },
+    "stress_xmp1_vsb_v": {
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
+    },
+    "stress_xmp1_vgb_v": {
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
+    },
+    "stress_xmp2_vds_v": {
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
+    },
+    "stress_xmp2_vgs_v": {
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
+    },
+    "stress_xmp2_vdb_v": {
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
+    },
+    "stress_xmp2_vsb_v": {
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
+    },
+    "stress_xmp2_vgb_v": {
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
+    }
+  }
+}

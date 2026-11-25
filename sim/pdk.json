@@ -1,0 +1,6 @@
+{
+  "name": "gf180",
+  "default_variant": "gf180mcuD",
+  "model_lib": "libs.tech/ngspice/sm141064.ngspice",
+  "design_include": "libs.tech/ngspice/design.ngspice"
+}

@@ -43,7 +43,11 @@ from dataclasses import dataclass, field
 # Default PVT axes. A block's own CLAUDE.md / spec should state its PVT
 # requirement explicitly; these are reasonable open-PDK defaults to start
 # from, not a substitute for that statement.
-DEFAULT_TEMPERATURES_C: tuple[float, ...] = (-40.0, 27.0, 125.0)
+# gf180-charge-pump (issue #2): the block states -40/25/125 C, so the core's
+# generic 27 C middle point is replaced here (report.matrix_conformance reads
+# this same constant, so the mandated-matrix check follows the block's PVT
+# statement instead of silently demanding 27 C as well).
+DEFAULT_TEMPERATURES_C: tuple[float, ...] = (-40.0, 25.0, 125.0)
 DEFAULT_SUPPLY_TOLERANCE: float = 0.10  # +/-10 %
 DEFAULT_NOMINAL_SUPPLY_V: float = 3.3   # gf180mcu 3.3 V core supply (pump input)
 
@@ -69,7 +73,9 @@ class Corner:
 #: if this PDK's model library uses different ones, edit the tuples below
 #: rather than the surrounding mechanics.
 CORNERS: dict[str, Corner] = {
-    "tt": Corner("tt", ("tt",), "typical NMOS / typical PMOS"),
+    # gf180mcu's sm141064.ngspice names the typical section ``typical`` (there is
+    # no ``tt`` section); ff/ss/fs/sf match the PDK file. Checked 2026-11-25.
+    "tt": Corner("tt", ("typical",), "typical NMOS / typical PMOS"),
     "ff": Corner("ff", ("ff",), "fast NMOS / fast PMOS"),
     "ss": Corner("ss", ("ss",), "slow NMOS / slow PMOS"),
     "fs": Corner("fs", ("fs",), "fast NMOS / slow PMOS"),

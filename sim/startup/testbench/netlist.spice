@@ -1,0 +1,30 @@
+* BENCH-BRING-UP DUT -- NOT the pump design.
+* A cross-coupled voltage doubler on nfet_06v0/pfet_06v0, present only so the
+* three benches (device-stress, load, startup) have something to exercise and
+* so the negative controls have a device to over-stress. It makes no claim to
+* meet the spec; the real topology (#1) replaces this file and the DEVICES
+* table in benches/generate.py, nothing else.
+*
+* Ports: vin vout clk clkb gnd.  Flying caps are ideal with an explicit
+* bottom-plate parasitic (cp_ratio, see sim/cap-model/ for the evidence).
+.param cfly=200p cp_ratio=0.01 wn=40u wp=80u lmos=0.6u
+.subckt pump_dut vin vout clk clkb gnd
+c1 clk a {cfly}
+c2 clkb b {cfly}
+cp1 a gnd {cfly*cp_ratio}
+cp2 b gnd {cfly*cp_ratio}
+xmn1 a b vin gnd nfet_06v0 w={wn} l={lmos}
+xmn2 b a vin gnd nfet_06v0 w={wn} l={lmos}
+xmp1 a b vout vout pfet_06v0 w={wp} l={lmos}
+xmp2 b a vout vout pfet_06v0 w={wp} l={lmos}
+.ends pump_dut
+
+* ---- stimulus (harness owns vdd_val / temp_c) -----------------------------
+.param fclk=10meg tr=2n tdel=1u
+vin vin 0 dc {vdd_val}
+vclk clk 0 pulse(0 {vdd_val} {tdel} {tr} {tr} {0.5/fclk-tr} {1/fclk})
+vclkb clkb 0 pulse({vdd_val} 0 {tdel} {tr} {tr} {0.5/fclk-tr} {1/fclk})
+xdut vin vout clk clkb 0 pump_dut
+cout vout 0 1n
+* enable = clock start at 1u; supply present from t=0; resistive full load.
+rload vout 0 450
