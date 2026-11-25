@@ -12,6 +12,7 @@ SIM = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SIM))
 
 from harness import corners, pdk, pump_evidence, report, runner, testbench
+from harness.simgate import requires_sim
 
 
 def _can_simulate() -> bool:
@@ -98,7 +99,7 @@ class MimcapCornerGrid(unittest.TestCase):
 
 
 class MimcapPdkSimulation(unittest.TestCase):
-    @unittest.skipUnless(_can_simulate(), "needs ngspice and the gf180mcu PDK")
+    @requires_sim(_can_simulate)
     def test_deck_selects_mimcap_section_and_scales_mim_corner_1p0ff(self):
         """Verify ngspice evaluates the PDK's mim_corner_1p0ff and MIM cap.
 
