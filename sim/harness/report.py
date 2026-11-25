@@ -44,6 +44,7 @@ from pathlib import Path
 from . import HARNESS_VERSION, UPSTREAM_PATTERN
 from .corners import (
     DEFAULT_MIMCAP_SECTIONS,
+    FAMILIES,
     DEFAULT_SUPPLY_TOLERANCE,
     DEFAULT_TEMPERATURES_C,
 )
@@ -70,21 +71,29 @@ MIN_PROCESS_CORNERS = 3
 #: total is always reported separately.
 COVERAGE_SAMPLE_LIMIT = 5
 
+#: Index of the MOS section inside ``point["corner_sections"]``.
+_MOS_IDX = FAMILIES.index("mos")
+
+# The process axis holds the MIM-cap section fixed and the mimcap axis holds
+# the MOS section fixed, so a flat MIM axis cannot hide inside "process".
 _AXIS_GROUP_KEY = {
-    "process": lambda p: (p["temp_c"], p["vdd"]),
+    "process": lambda p: (p["temp_c"], p["vdd"], p["mimcap"]),
     "temperature": lambda p: (p["corner"], p["vdd"]),
     "supply": lambda p: (p["corner"], p["temp_c"]),
+    "mimcap": lambda p: (p["corner_sections"][_MOS_IDX], p["temp_c"], p["vdd"]),
 }
 #: Names of the fixed axes (in key order) for each swept axis's slices.
 _AXIS_FIXED = {
-    "process": ("temp_c", "vdd"),
+    "process": ("temp_c", "vdd", "mimcap"),
     "temperature": ("corner", "vdd"),
     "supply": ("corner", "temp_c"),
+    "mimcap": ("mos", "temp_c", "vdd"),
 }
 _AXIS_LEVEL = {
     "process": lambda p: p["corner"],
     "temperature": lambda p: p["temp_c"],
     "supply": lambda p: p["vdd"],
+    "mimcap": lambda p: p["mimcap"],
 }
 
 
@@ -288,6 +297,27 @@ def axis_sensitivity(results: list[PointResult], measure_names: list[str]) -> di
             }
         out[name] = per_axis
     return out
+
+
+def mimcap_coverage(sensitivity: dict) -> dict:
+    """Did the MIM-cap corner axis demonstrably move any measurement?
+
+    ``verified`` only when some measurement's ``mimcap`` axis has >= 2 levels
+    and a non-zero spread. A DUT whose flying cap does not read
+    ``mim_corner_1p0ff`` (ideal ``C``, no ``cap_mim_*`` subcircuit) leaves the
+    axis flat, so its MIM-corner coverage is ``unverified`` -- the grid ran
+    the sections, but nothing proves they reached the circuit.
+    """
+    stats = [(per.get("mimcap") or {}) for per in sensitivity.values()]
+    if not stats or all(s.get("levels", 0) < 2 for s in stats):
+        return {"status": "unverified", "reason": "MIM-cap axis not swept"}
+    if any((s.get("max_pct") or 0) > 0 for s in stats):
+        return {"status": "verified", "reason": "MIM-cap corner moves at least one measurement"}
+    return {
+        "status": "unverified",
+        "reason": "MIM-cap axis is flat for every measurement -- the DUT's flying "
+                  "cap does not read mim_corner_1p0ff, so MIM-corner coverage is not shown",
+    }
 
 
 def evaluate_checks(
@@ -739,6 +769,7 @@ def build_record(
         "scope": analysis["scope"],
         "summary": analysis["summary"],
         "sensitivity": analysis["sensitivity"],
+        "mimcap_coverage": mimcap_coverage(analysis["sensitivity"]),
         "evidence_dir": (
             PointResult._ref("", evidence_dir, tb.experiment_dir) if evidence_dir else ""
         ),
@@ -853,6 +884,9 @@ def render_markdown(record: dict) -> str:
     ]
     if mimcap_corners:
         lines.append("  - MIM cap: " + ", ".join(mimcap_corners))
+        cov = record.get("mimcap_coverage")
+        if cov and cov["status"] != "verified":
+            lines.append(f"  - **MIM-corner coverage UNVERIFIED**: {cov['reason']}.")
     lines += [
         "  - Temperature: " + ", ".join(f"{t:g} C" for t in grid["temperatures_c"]),
         "  - Supply: " + ", ".join(f"{v:.2f} V" for v in grid["supplies_v"]),
