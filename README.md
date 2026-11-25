@@ -98,6 +98,8 @@ layout/        GDS + DRC/LVS reports (klayout-tools driven)
 measurements/  silicon characterization (empty until tape-out)
 sim/           analog testbenches + PVT corner results
 spec/          ratified spec + decision records
+WORK_LOG.md    chronological record of merged PRs and closed issues
+WORK_PLAN.md   backlog snapshot from GitHub label state
 ```
 
 ## License
