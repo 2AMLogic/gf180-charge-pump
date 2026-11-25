@@ -116,8 +116,10 @@ def evaluate(checks: dict, measure_names, results) -> dict:
     return {"output_lines": lines, "stress": stress, "failures": failures}
 
 
-NO_STRESS_LINE = ("- No device-stress measurements in this bench (no stress_* measurement "
-                  "declared); stress is not evidenced by this record.")
+# States only what ``scope`` knows: no margin was recorded. It deliberately does not say
+# why (nothing declared, no ok point, or an unrated measurement all look the same here).
+NO_STRESS_LINE = ("- No device-stress margin is recorded in this record; "
+                  "stress is not evidenced here.")
 
 
 def render_lines(scope: dict) -> list[str]:
