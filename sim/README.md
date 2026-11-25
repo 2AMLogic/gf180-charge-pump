@@ -13,12 +13,6 @@ sim-harness-core (see `harness/README.md`) plus `harness/pump_evidence.py`.
 | `startup/` | enable-to-4.5 V time at full load | `testbench/` |
 | `cap-model/` | flying-cap model extraction (MIM vs MOS cap); `records/` is append-only | `extract.py` |
 
-## Records
-
-`records/` is the append-only home for suite-level measurement records (for
-example `records/ngspice-sensitivity.md`), as distinct from
-`cap-model/records/`, which is that bench's own evidence.
-
 All four benches share one corner set: `mos_mimcap` (tt/ff/ss/fs/sf; `tt` maps
 to the PDK's `typical` section) x (`mimcap_typical`/`mimcap_ss`/`mimcap_ff`) x
 -40/25/125 C x 3.3 V +/-10 % = 135 points.
@@ -33,6 +27,12 @@ means editing `dut_reference.spice` and `DEVICES`.
 Placeholders (flagged in `generate.py`; change a value when #1 ratifies): 6.0 V
 device rating (**unconfirmed**; the PDK names these "6.0V" devices and carries no numeric rating, so the name-plate is used unpadded), ripple limit,
 start-up time limit.
+
+## Records
+
+`records/` is the append-only home for suite-level measurement records (for
+example `records/ngspice-sensitivity.md`), as distinct from
+`cap-model/records/`, which is that bench's own evidence.
 
 ## Running
 
