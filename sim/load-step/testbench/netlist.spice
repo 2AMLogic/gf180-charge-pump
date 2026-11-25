@@ -26,8 +26,8 @@ vclk clk 0 pulse(0 {vdd_val} {tdel} {tr} {tr} {0.5/fclk-tr} {1/fclk})
 vclkb clkb 0 pulse({vdd_val} 0 {tdel} {tr} {tr} {0.5/fclk-tr} {1/fclk})
 xdut vin vout clk clkb 0 pump_dut
 cout vout 0 1n
-.param tstep=40u
-* step: a resistive load (10 mA at 4.5 V) ramps in over 10 us at tstep.
+.param tstep=200u
+* step: a resistive load (10 mA at 4.5 V) ramps in over 10u at tstep.
 * The 5 kohm pre-step resistor is a keep-alive, NOT a reported load.
 rkeep vout 0 5k
 bstep vout 0 i='v(vout)/450*min(max((time-tstep)/10u,0),1)'

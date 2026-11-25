@@ -75,10 +75,28 @@ class StressNegativeControl(unittest.TestCase):
         self.assertEqual(r["worst"], "stress_b_vgs_v")
 
     def test_stress_checks_cover_every_device_metric(self):
-        tb = testbench.load(SIM / "device-stress" / "testbench")
         want = {f"stress_{d[0]}_{m}_v" for d in generate.DEVICES for m in generate.METRICS}
-        self.assertEqual(set(tb.checks), want)
-        self.assertEqual(set(tb.measure), want)
+        for slug in ("device-stress", "load-step", "startup"):
+            tb = testbench.load(SIM / slug / "testbench")
+            self.assertLessEqual(want, set(tb.checks), slug)
+            self.assertLessEqual(want, set(tb.measure), slug)
+            for k in want:
+                self.assertEqual(tb.checks[k]["max"], generate.RATING_V)
+
+    def test_devices_match_dut_netlist(self):
+        import re
+        dut = (SIM / "benches" / "dut_reference.spice").read_text()
+        inst = set(re.findall(r"(?m)^(x\S+)\s.*\b(?:nfet|pfet)_06v0\b", dut))
+        self.assertEqual(inst, {d[0] for d in generate.DEVICES})
+
+    def test_time_base_follows_start_limit(self):
+        self.assertGreaterEqual(generate.T_SETTLE_S, 2 * generate.START_MAX_S)
+        for slug in ("device-stress", "load"):
+            tb = testbench.load(SIM / slug / "testbench")
+            tstop = float(tb.analyses[0].split()[2].rstrip("u")) * 1e-6
+            self.assertGreater(tstop, generate.T_SETTLE_S)
+        text = (SIM / "load-step" / "testbench" / "netlist.spice").read_text()
+        self.assertIn(f".param tstep={generate.us(generate.T_SETTLE_S)}", text)
 
     @unittest.skipUnless(_can_simulate(), "needs ngspice and the gf180mcu PDK")
     def test_lowered_limit_fails_and_real_limit_passes(self):
@@ -86,7 +104,7 @@ class StressNegativeControl(unittest.TestCase):
         self.assertEqual(res.status, "ok", res.message)
         pt = [res.point]
         ok = report.analyze_results(tb, pt, [res], allow_unswept_axes=True)
-        self.assertEqual(ok["failures"], [])  # reference DUT is inside 6.5 V at tt/25C/3.3 V
+        self.assertEqual(ok["failures"], [])  # reference DUT is inside 6.0 V at tt/25C/3.3 V
         low = copy.deepcopy(tb)
         for c in low.checks.values():
             c["max"] = 0.1  # negative control: limit far below any real stress
@@ -96,7 +114,7 @@ class StressNegativeControl(unittest.TestCase):
 
     @unittest.skipUnless(_can_simulate(), "needs ngspice and the gf180mcu PDK")
     def test_overstressed_dut_fails(self):
-        """A DUT run at 2x supply must violate the real 6.5 V rating."""
+        """A DUT run at 2x supply must violate the real 6.0 V rating."""
         tb, res = single_point.run("device-stress", vdd=7.0)
         self.assertEqual(res.status, "ok", res.message)
         r = pump_evidence.stress_margins(res.measurements, generate.RATING_V)

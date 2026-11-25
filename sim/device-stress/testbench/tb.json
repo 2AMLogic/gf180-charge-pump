@@ -15,7 +15,7 @@
   "description": "Per-device Vds/Vgs/Vdb/Vsb/Vgb maxima over the full transient at every PVT point at 10 mA load, each against the device rating.",
   "claim": "No device exceeds its rated terminal voltage at any PVT point at 10 mA load, transients included.",
   "analyses": [
-    "tran 1n 40u 0 1n"
+    "tran 1n 210u 0 1n"
   ],
   "measure": {
     "stress_xmn1_vds_v": "maximum(abs(v(xdut.a)-v(vin)))",
@@ -41,84 +41,84 @@
   },
   "checks": {
     "stress_xmn1_vds_v": {
-      "max": 6.5,
-      "description": "rated limit 6.5 V (UNCONFIRMED; see generate.py)"
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
     },
     "stress_xmn1_vgs_v": {
-      "max": 6.5,
-      "description": "rated limit 6.5 V (UNCONFIRMED; see generate.py)"
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
     },
     "stress_xmn1_vdb_v": {
-      "max": 6.5,
-      "description": "rated limit 6.5 V (UNCONFIRMED; see generate.py)"
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
     },
     "stress_xmn1_vsb_v": {
-      "max": 6.5,
-      "description": "rated limit 6.5 V (UNCONFIRMED; see generate.py)"
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
     },
     "stress_xmn1_vgb_v": {
-      "max": 6.5,
-      "description": "rated limit 6.5 V (UNCONFIRMED; see generate.py)"
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
     },
     "stress_xmn2_vds_v": {
-      "max": 6.5,
-      "description": "rated limit 6.5 V (UNCONFIRMED; see generate.py)"
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
     },
     "stress_xmn2_vgs_v": {
-      "max": 6.5,
-      "description": "rated limit 6.5 V (UNCONFIRMED; see generate.py)"
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
     },
     "stress_xmn2_vdb_v": {
-      "max": 6.5,
-      "description": "rated limit 6.5 V (UNCONFIRMED; see generate.py)"
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
     },
     "stress_xmn2_vsb_v": {
-      "max": 6.5,
-      "description": "rated limit 6.5 V (UNCONFIRMED; see generate.py)"
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
     },
     "stress_xmn2_vgb_v": {
-      "max": 6.5,
-      "description": "rated limit 6.5 V (UNCONFIRMED; see generate.py)"
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
     },
     "stress_xmp1_vds_v": {
-      "max": 6.5,
-      "description": "rated limit 6.5 V (UNCONFIRMED; see generate.py)"
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
     },
     "stress_xmp1_vgs_v": {
-      "max": 6.5,
-      "description": "rated limit 6.5 V (UNCONFIRMED; see generate.py)"
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
     },
     "stress_xmp1_vdb_v": {
-      "max": 6.5,
-      "description": "rated limit 6.5 V (UNCONFIRMED; see generate.py)"
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
     },
     "stress_xmp1_vsb_v": {
-      "max": 6.5,
-      "description": "rated limit 6.5 V (UNCONFIRMED; see generate.py)"
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
     },
     "stress_xmp1_vgb_v": {
-      "max": 6.5,
-      "description": "rated limit 6.5 V (UNCONFIRMED; see generate.py)"
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
     },
     "stress_xmp2_vds_v": {
-      "max": 6.5,
-      "description": "rated limit 6.5 V (UNCONFIRMED; see generate.py)"
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
     },
     "stress_xmp2_vgs_v": {
-      "max": 6.5,
-      "description": "rated limit 6.5 V (UNCONFIRMED; see generate.py)"
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
     },
     "stress_xmp2_vdb_v": {
-      "max": 6.5,
-      "description": "rated limit 6.5 V (UNCONFIRMED; see generate.py)"
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
     },
     "stress_xmp2_vsb_v": {
-      "max": 6.5,
-      "description": "rated limit 6.5 V (UNCONFIRMED; see generate.py)"
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
     },
     "stress_xmp2_vgb_v": {
-      "max": 6.5,
-      "description": "rated limit 6.5 V (UNCONFIRMED; see generate.py)"
+      "max": 6.0,
+      "description": "rated limit 6.0 V (UNCONFIRMED; see generate.py)"
     }
   }
 }

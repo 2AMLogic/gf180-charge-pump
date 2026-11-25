@@ -26,5 +26,5 @@ vclk clk 0 pulse(0 {vdd_val} {tdel} {tr} {tr} {0.5/fclk-tr} {1/fclk})
 vclkb clkb 0 pulse({vdd_val} 0 {tdel} {tr} {tr} {0.5/fclk-tr} {1/fclk})
 xdut vin vout clk clkb 0 pump_dut
 cout vout 0 1n
-* enable = clock start at 1 us; supply present from t=0; resistive full load.
+* enable = clock start at 1u; supply present from t=0; resistive full load.
 rload vout 0 450

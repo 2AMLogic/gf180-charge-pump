@@ -23,8 +23,8 @@ assembles it with each stimulus into `<slug>/testbench/netlist.spice` and writes
 benches/generate.py --check` fails on drift. Swapping in the real topology (#1)
 means editing `dut_reference.spice` and `DEVICES`.
 
-Placeholders (flagged in `generate.py`; change a value when #1 ratifies): 6.5 V
-device rating (**unconfirmed**; the PDK model files carry none), ripple limit,
+Placeholders (flagged in `generate.py`; change a value when #1 ratifies): 6.0 V
+device rating (**unconfirmed**; the PDK names these "6.0V" devices and carries no numeric rating, so the name-plate is used unpadded), ripple limit,
 start-up time limit.
 
 ## Running
@@ -41,9 +41,12 @@ shared worker for the whole grid.
 
 ## PDK finding
 
-`sm141064.ngspice` selects `nfet_06v0_t` / `pfet_06v0_t` in *every* process
-section (tt/ff/ss/fs/sf), so the 6 V devices this block uses do not vary with
-the process corner in this model; only temperature and supply move them. Process
-corners still matter for the 3.3 V devices and passives. Stress results across
-`mos` corners will therefore be identical per temperature/supply for 6 V-only
-DUTs; do not read that as corner coverage.
+`sm141064.ngspice` selects the same `nfet_06v0_t` / `pfet_06v0_t` model *cards*
+in every process section (tt/ff/ss/fs/sf), but each section first sets different
+skew `.param`s that those cards consume (`nfet_06v0_vth0`, `_vsat`, `_xl`/`_xw`,
+`_tox`, `_cgso`/`_cgdo`, `pfet_06v0_dvth0`, `_dxl`/`_dxw`/`_dtox`, ...). The 6 V
+devices therefore **do** vary with the process corner. Measured on the bring-up
+DUT (`load`, 25 C, 3.3 V, 10 mA-sized resistor): mean Vout 2.589 V (tt),
+3.011 V (ff), 2.139 V (ss), a 0.87 V spread from the process corner alone.
+The process corner is a first-order axis for this block; do not skip it or
+dismiss a corner-driven failure.
