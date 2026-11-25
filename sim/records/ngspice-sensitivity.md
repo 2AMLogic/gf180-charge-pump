@@ -28,8 +28,11 @@ between ngspice-45.2 and ngspice-47.
   (`sim/tests/test_benches.py:196`). `render_lines({"output_lines": [], "stress": []})`
   returns one "No device-stress margin is recorded..." line where the test expects
   `[]`. This is a pure-Python rendering assertion that does not invoke ngspice. It
-  is not simulator-sensitive; it is a stale expectation after `7991f56`
-  (empty-stress line change), already tracked as #32.
+  is not simulator-sensitive; it is a stale expectation, tracked as #32. Measured
+  history: `bde908b` added the test on a branch where `render_lines` returned `[]`
+  for an empty scope (no `NO_STRESS_LINE` branch); a parallel lineage already
+  emitted `NO_STRESS_LINE` unconditionally (`7991f56` only reworded its text). The
+  expectation went stale when the two lineages merged. #32 owns the fix.
 
 Conclusion: **insensitive to ngspice 45.2 vs 47 on this suite: outcomes identical
 (45 pass / 1 identical non-simulator failure, 46/46 match).**
@@ -39,3 +42,9 @@ Conclusion: **insensitive to ngspice 45.2 vs 47 on this suite: outcomes identica
 The suite asserts pass/fail against bounds. Numeric values were not compared
 between versions, so this bounds outcome sensitivity, not numeric agreement of
 individual waveforms. The committed cap-model evidence was not re-run.
+
+Run A's log is re-derivable from the CI run cited above. Run B's log (a local
+run on a loom worker) is not committed or linked, so the "46/46 outcomes match"
+comparison against it cannot be re-derived from the repository; it rests on the
+recorder's local extraction. Re-running run B at `8cd63f2` with ngspice-47 and
+the same PDK revision is the way to reproduce it.
