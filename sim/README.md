@@ -13,8 +13,9 @@ sim-harness-core (see `harness/README.md`) plus `harness/pump_evidence.py`.
 | `startup/` | enable-to-4.5 V time at full load | `testbench/` |
 | `cap-model/` | flying-cap model extraction (MIM vs MOS cap); `records/` is append-only | `extract.py` |
 
-All four benches share one corner set: `mos` (tt/ff/ss/fs/sf; `tt` maps to the
-PDK's `typical` section) x -40/25/125 C x 3.3 V +/-10 % = 45 points.
+All four benches share one corner set: `mos_mimcap` (tt/ff/ss/fs/sf; `tt` maps
+to the PDK's `typical` section) x (`mimcap_typical`/`mimcap_ss`/`mimcap_ff`) x
+-40/25/125 C x 3.3 V +/-10 % = 135 points.
 
 **The DUT is a parameter.** `benches/dut_reference.spice` is a bench bring-up
 doubler, *not the design*, and does not meet the spec. `benches/generate.py`
@@ -35,7 +36,7 @@ python3 benches/single_point.py device-stress      # ONE point, local debug prob
 python3 -m unittest tests.test_benches
 ```
 
-The full 45-point grid is a `klt sim` batch request (`--wait-for-capacity 600`),
+The full 135-point grid is a `klt sim` batch request (`--wait-for-capacity 600`),
 not a local loop. The harness `run` fans out locally, so do not use it on a
 shared worker for the whole grid.
 

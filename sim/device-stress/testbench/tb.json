@@ -10,7 +10,7 @@
     125.0
   ],
   "corners": [
-    "mos"
+    "mos_mimcap"
   ],
   "description": "Per-device Vds/Vgs/Vdb/Vsb/Vgb maxima over the full transient at every PVT point at 10 mA load, each against the device rating.",
   "claim": "No device exceeds its rated terminal voltage at any PVT point at 10 mA load, transients included.",

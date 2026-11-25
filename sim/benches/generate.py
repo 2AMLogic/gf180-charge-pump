@@ -233,7 +233,7 @@ def render(slug: str) -> dict[str, str]:
         "nominal_supply_v": NOMINAL_V,
         "supply_tolerance": TOL,
         "temperatures_c": TEMPS,
-        "corners": ["mos"],
+        "corners": ["mos_mimcap"],
         **tb,
     }
     return {"netlist.spice": DUT + "\n" + stim, "tb.json": json.dumps(tb, indent=2) + "\n"}

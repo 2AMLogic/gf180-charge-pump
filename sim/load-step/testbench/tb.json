@@ -10,7 +10,7 @@
     125.0
   ],
   "corners": [
-    "mos"
+    "mos_mimcap"
   ],
   "description": "Vout after a 10 us step to 10 mA, min over the transient and settled mean; peak Vds of the output devices during the step; every device terminal pair against its rating over the whole transient.",
   "claim": "Vout never leaves 5.0V+/-10% through a step to 10 mA.",
