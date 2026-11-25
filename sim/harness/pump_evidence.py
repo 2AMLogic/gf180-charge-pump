@@ -119,6 +119,12 @@ def evaluate(checks: dict, measure_names, results) -> dict:
     return {"output_lines": lines, "stress": stress, "failures": failures}
 
 
+# States only what ``scope`` knows: no margin was recorded. It deliberately does not say
+# why (nothing declared, no ok point, or an unrated measurement all look the same here).
+NO_STRESS_LINE = ("- No device-stress margin is recorded in this record; "
+                  "stress is not evidenced here.")
+
+
 def render_lines(scope: dict) -> list[str]:
     """Markdown bullets for a record's ``scope`` section.
 
@@ -151,4 +157,6 @@ def render_lines(scope: dict) -> list[str]:
         out.append(f"- Worst device-stress margin: {worst['worst_margin_v']:.4g} V on "
                    f"`{worst['worst']}` at {worst['at']} "
                    f"({sum(1 for s in stress if s['violations'])} of {len(stress)} points violate)")
+    else:
+        out.append(NO_STRESS_LINE)
     return out

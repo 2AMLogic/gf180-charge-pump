@@ -69,6 +69,47 @@ class Manifests(unittest.TestCase):
         self.assertIn("ss -40 C 2.97 V", line)
 
 
+class EmptyStressRendering(unittest.TestCase):
+    def test_empty_stress_states_absence(self):
+        lines = pump_evidence.render_lines({"output_lines": [], "stress": []})
+        self.assertEqual(lines, [pump_evidence.NO_STRESS_LINE])
+        self.assertIn("not evidenced", lines[0])
+
+    def test_nonempty_stress_has_no_none_line(self):
+        stress = [{"at": "tt", "worst": "stress_a_vds_v", "worst_margin_v": 0.5, "violations": []}]
+        lines = pump_evidence.render_lines({"output_lines": [], "stress": stress})
+        self.assertNotIn(pump_evidence.NO_STRESS_LINE, lines)
+        self.assertTrue(lines[0].startswith("- Worst device-stress margin: 0.5 V"))
+
+
+class EmptyStressClaimIsTrue(unittest.TestCase):
+    """The empty-stress line must hold for every record that can produce it."""
+
+    def _scope(self, measure, checks, values, status="ok"):
+        from harness.runner import PointResult
+        tb = copy.deepcopy(testbench.load(SIM / "startup" / "testbench"))
+        tb.measure, tb.checks = dict.fromkeys(measure, "x"), checks
+        pt = corners.build_grid(corners.resolve_corners(["mos"]), [25.0], [3.3])[0]
+        res = PointResult(point=pt, status=status, measurements=values)
+        return report.analyze_results(tb, [pt], [res], allow_unswept_axes=True)
+
+    def test_unrated_declared_stress_does_not_claim_none_declared(self):
+        a = self._scope(["stress_a_vds_v"], {}, {"stress_a_vds_v": 1.0})
+        self.assertEqual([f["kind"] for f in a["failures"]], ["stress_unrated"])
+        self.assertEqual(a["scope"]["stress"], [])
+        text = " ".join(pump_evidence.render_lines(a["scope"]))
+        self.assertNotIn("declared", text)
+        self.assertNotIn("in this bench", text)
+        self.assertIn("not evidenced", text)
+
+    def test_declared_rated_stress_with_no_ok_point_does_not_claim_none_declared(self):
+        a = self._scope(["stress_a_vds_v"], {"stress_a_vds_v": {"max": 6.0}}, {}, status="error")
+        self.assertEqual(a["scope"]["stress"], [])
+        text = " ".join(pump_evidence.render_lines(a["scope"]))
+        self.assertNotIn("declared", text)
+        self.assertNotIn("no stress_*", text)
+
+
 class StressNegativeControl(unittest.TestCase):
     def test_margin_arithmetic(self):
         r = pump_evidence.stress_margins({"stress_a_vds_v": 6.0, "stress_b_vgs_v": 7.0}, 6.5)
