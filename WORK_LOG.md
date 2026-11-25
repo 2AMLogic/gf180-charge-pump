@@ -6,6 +6,8 @@ Chronological record of merged PRs and closed issues, maintained by the Guide ro
 
 _None yet._
 
+## Entries
+
 ### 2026-11-25
 
 - **PR #5**: feat: add charge-pump stress, load, load-step and startup benches
