@@ -193,7 +193,10 @@ class RenderLinesSummary(unittest.TestCase):
         out = pump_evidence.render_lines(self._scope(1))
         self.assertIn("Min `vout_at_10ma_a_v`: c0", "\n".join(out))
         self.assertIn("Max `vout_at_10ma_a_v`: c0", "\n".join(out))
-        self.assertEqual(pump_evidence.render_lines({"output_lines": [], "stress": []}), [])
+        self.assertEqual(
+            pump_evidence.render_lines({"output_lines": [], "stress": []}),
+            [pump_evidence.NO_STRESS_LINE],
+        )
 
 
 class ScopeRuleInRecords(unittest.TestCase):
