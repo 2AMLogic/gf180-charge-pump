@@ -10,6 +10,12 @@ _None yet._
 
 ### 2026-11-25
 
+- **PR #37**: docs: record ngspice 45.2 vs 47 sim-tests outcome comparison
+- **Issue #33** (closed): sim gate runs ngspice-45.2 while recorded evidence is ngspice-47: sensitivity unmeasured
+- **PR #38**: fix: use PvtPoint.as_dict() for Vout scope lines so mimcap tag is recorded
+- **Issue #31** (closed): pump_evidence.evaluate drops mimcap, leaving output_lines' mimcap branch dead on the report path
+- **PR #34**: fix: expect NO_STRESS_LINE for empty scope in render_lines summary test
+- **Issue #32** (closed): sim-tests fails deterministically on main: test_single_point_and_empty asserts [] while render_lines emits NO_STRESS_LINE
 - **Issue #27** (closed): sim-tests CI pins the PDK revision but floats ngspice and ciel versions
 - **PR #30**: ci: pin ciel and document floating ngspice in sim-tests
 - **Issue #17** (closed): Scope-rule record section is silent on device stress for a bench with no stress_* measurements
