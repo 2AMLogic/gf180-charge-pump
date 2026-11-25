@@ -62,26 +62,27 @@ result. Where the agents hit friction with the open-source tooling — most ofte
 filed as a public issue against the tool itself, so the fix benefits everyone
 using gf180mcu, not just this repo.
 
-## Target specification (DRAFT — engineering to ratify, see issue #1)
+## Target specification (PROPOSED — see [spec/0001-target-spec.md](spec/0001-target-spec.md), issue #1)
 
 | Parameter | Target | Stretch |
 |---|---|---|
 | Input supply | 3.3 V ±10% (2.97–3.63 V) | — |
-| Output voltage under full load, all PVT corners | 5.0 V ±10% (4.5–5.5 V) | programmable 4.0–5.5 V |
+| Output voltage at 10 mA load, all PVT corners (≤ 5.5 V with no load) | 5.0 V ±10% (4.5–5.5 V) | programmable 4.0–5.5 V |
 | Load current at that output | ≥ 10 mA, continuous for ≥ 10 µs | ≥ 20 mA |
 | Enable to output within spec | ≤ 10 µs | ≤ 2 µs |
 | Output ripple at full load | ≤ 100 mV p-p | ≤ 25 mV p-p |
 | Device stress | no device exceeds its rated Vds / Vgs / Vdb at any corner, transient included | — |
-| Core area | ≤ 0.25 mm² | ≤ 0.10 mm² |
+| Core area (footprint including all capacitors) | ≤ 0.50 mm² (draft 0.25 mm²; see record §3) | not committed |
 | PVT corners | tt/ff/ss/fs/sf × −40/25/125 °C × supply ±10% | — |
 
 The output and load rows are the program-supply assumptions of the sibling
 [gf180-efuse-otp](https://github.com/2AMLogic/gf180-efuse-otp) (its
 assumptions A1–A3, which have no PDK source). They are inherited as targets
 here, not measured facts. The central tension the review must settle is
-**area vs. current**: 10 mA from on-die capacitors means hundreds of pF of
-flying capacitance at practical clock rates, so the load row and the area
-row cannot both be taken for granted.
+**area vs. current**: 10 mA at ≤ 100 mV ripple needs about 0.36 mm² of MIM
+capacitance at 100 MHz (more at lower clocks) before switches and overhead,
+so the record proposes that the load and ripple rows govern and the area row
+moves to ≤ 0.50 mm². The reviewers decide.
 
 Issue #1 takes this target spec through review. A separate EE reviewer and a
 separate market reviewer, neither the author of the PR or of the design, read centrally pinned
