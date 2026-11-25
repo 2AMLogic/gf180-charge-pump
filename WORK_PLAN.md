@@ -7,7 +7,7 @@ The body below is a snapshot of GitHub label state as of the last merged docs-ma
 <!-- Maintained automatically by the Guide triage agent. Manual edits are fine but may be overwritten. -->
 
 <!-- guide:plan-body:start -->
-_Generated: 2026-11-25T01:39:42Z (snapshot; compare against live labels)_
+_Generated: 2026-11-25T03:15:00Z (snapshot; compare against live labels)_
 ## Operator Attention: Merge-Risk-Hold Pileup
 
 Judge-approved PRs under a hold (`loom:blocked` or `loom:operator`) — only a human merge decision is missing.
@@ -25,10 +25,17 @@ _None._
 `loom:important`; taken before unlabelled work.
 
 - **#1**: Ratify the target spec
+- **#7**: Flying-cap value is held at typical: the PVT grid does not sweep the PDK's MIM capacitor corners
 
 ## Ready
 
-Human-approved issues (`loom:issue`) ready for implementation — excluding held, `loom:building`, and issues with an open linked PR.
+Human-approved issues (`loom:issue`) ready for implementation — excluding held (`loom:blocked`/`loom:operator`/`loom:frozen`), `loom:building`, and issues with an open linked PR (native admission `OPEN_PR`; listed under Issues with Open PRs).
+
+_None._
+
+## Issues with Open PRs (Not Dispatchable)
+
+`loom:issue` issues an open linked PR already holds — native admission would refuse them (`OPEN_PR`); listed with the PR and its stage, not counted above.
 
 _None._
 
@@ -36,15 +43,49 @@ _None._
 
 Issues currently being built (`loom:building`).
 
-- **#2**: Harness bootstrap: pump testbenches, device-stress and load benches
+- **#1**: Ratify the target spec
+- **#7**: Flying-cap value is held at typical: the PVT grid does not sweep the PDK's MIM capacitor corners
+
+## PRs Awaiting Review
+
+PRs waiting on Judge (`loom:review-requested`).
+
+- **#13**: feat: add mimcap corner family and 135-point PVT grid with report tagging
+
+## Approved (Awaiting Merge)
+
+PRs that passed review and are queued for Champion auto-merge (`loom:pr`).
+
+_None._
+
+## Proposed
+
+Issues carrying `loom:curated`.
+
+- **#1**: Ratify the target spec *(curated)*
+- **#7**: Flying-cap value is held at typical: the PVT grid does not sweep the PDK's MIM capacitor corners *(curated)*
+
+## Proposed (Architect / Hermit)
+
+- **#12**: pump_evidence.output_lines/stress_margins are never called outside tests: wire into report or drop *(hermit)*
+
+## Epics
+
+_None._
 
 ## Backlog Balance
 
 | Bucket | Count |
 |------|-------|
+| Operator merge-risk holds | 0 |
 | Very important | 0 |
-| Important | 1 |
-| Ready | 0 |
-| In Progress | 1 |
+| Important | 2 |
+| Ready (`loom:issue`, net of holds/building/open-linked-PRs) | 0 |
+| In Progress (`loom:building`) | 2 |
 | Held, no other bucket | 1 |
+| PRs awaiting review | 1 |
+| Approved PRs awaiting merge | 0 |
+| Curated | 2 |
+| Architect / Hermit proposals | 1 |
+| Active epics | 0 |
 <!-- guide:plan-body:end -->
