@@ -116,6 +116,10 @@ def evaluate(checks: dict, measure_names, results) -> dict:
     return {"output_lines": lines, "stress": stress, "failures": failures}
 
 
+NO_STRESS_LINE = ("- No device-stress measurements in this bench (no stress_* measurement "
+                  "declared); stress is not evidenced by this record.")
+
+
 def render_lines(scope: dict) -> list[str]:
     """Markdown bullets for a record's ``scope`` section."""
     out = [f"- {x['at']}: {x['line']}" for x in scope["output_lines"]]
@@ -125,4 +129,6 @@ def render_lines(scope: dict) -> list[str]:
         out.append(f"- Worst device-stress margin: {worst['worst_margin_v']:.4g} V on "
                    f"`{worst['worst']}` at {worst['at']} "
                    f"({sum(1 for s in stress if s['violations'])} of {len(stress)} points violate)")
+    else:
+        out.append(NO_STRESS_LINE)
     return out

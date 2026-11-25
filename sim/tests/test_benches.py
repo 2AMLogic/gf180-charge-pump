@@ -68,6 +68,19 @@ class Manifests(unittest.TestCase):
         self.assertIn("ss -40 C 2.97 V", line)
 
 
+class EmptyStressRendering(unittest.TestCase):
+    def test_empty_stress_states_absence(self):
+        lines = pump_evidence.render_lines({"output_lines": [], "stress": []})
+        self.assertEqual(lines, [pump_evidence.NO_STRESS_LINE])
+        self.assertIn("not evidenced", lines[0])
+
+    def test_nonempty_stress_has_no_none_line(self):
+        stress = [{"at": "tt", "worst": "stress_a_vds_v", "worst_margin_v": 0.5, "violations": []}]
+        lines = pump_evidence.render_lines({"output_lines": [], "stress": stress})
+        self.assertNotIn(pump_evidence.NO_STRESS_LINE, lines)
+        self.assertTrue(lines[0].startswith("- Worst device-stress margin: 0.5 V"))
+
+
 class StressNegativeControl(unittest.TestCase):
     def test_margin_arithmetic(self):
         r = pump_evidence.stress_margins({"stress_a_vds_v": 6.0, "stress_b_vgs_v": 7.0}, 6.5)
