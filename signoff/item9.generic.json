@@ -31,7 +31,7 @@
         "role": "testbench",
         "path": "sim/benches/generate.py",
         "passed": true,
-        "content_hash": "sha256:efc1f8167cbff777a62aee023eab7d6d3064981b4ba1ef37cd5d1a69a5169420"
+        "content_hash": "sha256:221a88ba5bd06c55008c3590de8f46dcabd229c7f2940a373900cb647c64fafc"
       },
       {
         "check": "present",
@@ -122,7 +122,7 @@
         "role": "testbench",
         "path": "sim/load-step/testbench/tb.json",
         "passed": true,
-        "content_hash": "sha256:2977045a8b4bdb723165e730224488d2284c3634a11fca918f6e3a16119ff3bd"
+        "content_hash": "sha256:394e7cfb294562ed2edbeaa603ef65d941330780a707f680dc3c678809867b08"
       },
       {
         "check": "present",

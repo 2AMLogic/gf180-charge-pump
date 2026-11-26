@@ -176,6 +176,40 @@ class StressNegativeControl(unittest.TestCase):
         self.assertTrue(bad["failures"])
 
 
+class LoadStepVoltage(unittest.TestCase):
+    @requires_sim(_can_simulate)
+    def test_ramp_excursions_and_endpoints_fail_their_bounds(self):
+        cases = [
+            ("interior", [(0.4, 5), (0.5, 4.1), (0.6, 5.9), (0.7, 5)], 4.1, 5.9),
+            ("endpoints", [(-0.1, 5), (0, 4), (0.1, 5), (0.9, 5), (1, 6), (1.1, 5)], 4, 6),
+        ]
+        with tempfile.TemporaryDirectory() as temp:
+            bench = Path(temp)
+            shutil.copyfile(SIM / "load-step/testbench/tb.json", bench / "tb.json")
+            for name, points, minimum, maximum in cases:
+                with self.subTest(name=name):
+                    waveform = " ".join(
+                        f"{generate.us(generate.T_SETTLE_S + fraction * generate.T_STEP_S)} {volts:g}"
+                        for fraction, volts in points)
+                    # Run the production manifest on a known VOUT waveform.
+                    (bench / "netlist.spice").write_text(
+                        f"vforced vout 0 pwl(0 5 {waveform})\nvin vin 0 3.3\n"
+                        ".subckt fixture gnd\nra a gnd 1k\nrb b gnd 1k\n.ends fixture\n"
+                        "xdut 0 fixture\n")
+                    tb, res = single_point.run("load-step", tb_dir=bench, num_threads=1)
+                    self.assertEqual(res.status, "ok", res.message)
+                    prefix = f"vout_step_to_{generate.ILOAD_MA}ma_"
+                    self.assertAlmostEqual(res.measurements[prefix + "ramp_min_v"], minimum)
+                    self.assertAlmostEqual(res.measurements[prefix + "ramp_max_v"], maximum)
+                    bad = report.analyze_results(tb, [res.point], [res], allow_unswept_axes=True)
+                    failed = {item["measurement"] for item in bad["failures"]}
+                    self.assertIn(prefix + "ramp_min_v", failed)
+                    self.assertIn(prefix + "ramp_max_v", failed)
+                    if name == "interior":
+                        for suffix in ("post_min_v", "post_max_v", "post_mean_v"):
+                            self.assertAlmostEqual(res.measurements[prefix + suffix], 5)
+
+
 class RenderLinesSummary(unittest.TestCase):
     def _scope(self, n):
         ol = []
