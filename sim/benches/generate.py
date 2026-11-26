@@ -41,7 +41,6 @@ DUT = (HERE / "dut_reference.spice").read_text()
 NOMINAL_V = 3.3
 TOL = 0.10
 TEMPS = [-40.0, 25.0, 125.0]
-CORNERS = ["tt", "ff", "ss", "fs", "sf"]
 VOUT_NOM, VOUT_TOL = 5.0, 0.10
 VOUT_MIN = VOUT_NOM * (1 - VOUT_TOL)
 ILOAD_MA = 10
@@ -171,6 +170,10 @@ def load():
 def load_step():
     tstep, t_end = T_SETTLE_S, T_SETTLE_S + T_STEP_S + T_POST_S
     t_ramped = tstep + T_STEP_S
+    # A stored breakpoint and its Nutmeg time literal can differ by a few ulps.
+    # One attosecond includes both ramp endpoints at this microsecond timescale.
+    ramp_start = f"({us(tstep)}-1e-18)"
+    ramp_end = f"({us(t_ramped)}+1e-18)"
     stim = COMMON % {"tdel": "0"} + (
         f".param tstep={us(tstep)}\n"
         f"* step: a resistive load ({ILOAD_MA} mA at {VOUT_MIN:g} V) ramps in over {us(T_STEP_S)} at tstep.\n"
@@ -179,24 +182,26 @@ def load_step():
         f"bstep vout 0 i='v(vout)/{VOUT_MIN / (ILOAD_MA * 1e-3):g}*min(max((time-tstep)/{T_STEP_S * 1e6:g}u,0),1)'\n"
     )
     measure = {
+        f"vout_step_to_{ILOAD_MA}ma_ramp_min_v": w_min("v(vout)", ramp_start, ramp_end),
+        f"vout_step_to_{ILOAD_MA}ma_ramp_max_v": w_max("v(vout)", ramp_start, ramp_end),
         f"vout_step_to_{ILOAD_MA}ma_post_mean_v": w_mean("v(vout)", us(t_ramped + T_POST_S / 2), us(t_end)),
         f"vout_step_to_{ILOAD_MA}ma_post_min_v": w_min("v(vout)", us(t_ramped), us(t_end)),
         f"vout_step_to_{ILOAD_MA}ma_post_max_v": w_max("v(vout)", us(t_ramped), us(t_end)),
-        "vds_peak_pmos_during_step_v": w_max("abs(v(xdut.a)-v(vout))", us(tstep), us(t_end)),
     }
     checks = {
+        f"vout_step_to_{ILOAD_MA}ma_ramp_min_v": {"min": VOUT_MIN},
+        f"vout_step_to_{ILOAD_MA}ma_ramp_max_v": {"max": VOUT_NOM * (1 + VOUT_TOL)},
         f"vout_step_to_{ILOAD_MA}ma_post_min_v": {"min": VOUT_MIN},
         f"vout_step_to_{ILOAD_MA}ma_post_max_v": {"max": VOUT_NOM * (1 + VOUT_TOL)},
-        "vds_peak_pmos_during_step_v": {"max": RATING_V},
     }
     # Full stress coverage over the whole step transient (startup + step edge).
     s_measure, s_checks = stress()
     measure.update(s_measure)
     checks.update(s_checks)
     return stim, dict(
-        description=f"Vout after a {T_STEP_S * 1e6:g} us step to {ILOAD_MA} mA, min over the transient and settled "
-                    "mean; peak Vds of the output devices during the step; every device terminal pair against "
-                    "its rating over the whole transient.",
+        description=f"Vout min and max during and after the {T_STEP_S * 1e6:g} us resistive load ramp "
+                    f"({ILOAD_MA} mA at {VOUT_MIN:g} V), plus settled mean. Per-device terminal stress covers "
+                    "the whole transient, including startup and the load ramp.",
         claim=f"Vout never leaves {VOUT_NOM}V+/-{VOUT_TOL*100:g}% through a step to {ILOAD_MA} mA.",
         analyses=[f"tran 1n {us(t_end)} 0 {TMAX}"], measure=measure, checks=checks)
 

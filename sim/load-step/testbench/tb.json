@@ -12,16 +12,17 @@
   "corners": [
     "mos_mimcap"
   ],
-  "description": "Vout after a 10 us step to 10 mA, min over the transient and settled mean; peak Vds of the output devices during the step; every device terminal pair against its rating over the whole transient.",
+  "description": "Vout min and max during and after the 10 us resistive load ramp (10 mA at 4.5 V), plus settled mean. Per-device terminal stress covers the whole transient, including startup and the load ramp.",
   "claim": "Vout never leaves 5.0V+/-10% through a step to 10 mA.",
   "analyses": [
     "tran 1n 250u 0 1n"
   ],
   "measure": {
+    "vout_step_to_10ma_ramp_min_v": "-maximum(-((time gt (200u-1e-18)) and (time lt (210u+1e-18)))*v(vout)-(1-((time gt (200u-1e-18)) and (time lt (210u+1e-18))))*1e3)",
+    "vout_step_to_10ma_ramp_max_v": "maximum(((time gt (200u-1e-18)) and (time lt (210u+1e-18)))*v(vout)-(1-((time gt (200u-1e-18)) and (time lt (210u+1e-18))))*1e3)",
     "vout_step_to_10ma_post_mean_v": "mean(((time gt 230u) and (time lt 250u))*v(vout))/mean(((time gt 230u) and (time lt 250u)))",
     "vout_step_to_10ma_post_min_v": "-maximum(-((time gt 210u) and (time lt 250u))*v(vout)-(1-((time gt 210u) and (time lt 250u)))*1e3)",
     "vout_step_to_10ma_post_max_v": "maximum(((time gt 210u) and (time lt 250u))*v(vout)-(1-((time gt 210u) and (time lt 250u)))*1e3)",
-    "vds_peak_pmos_during_step_v": "maximum(((time gt 200u) and (time lt 250u))*abs(v(xdut.a)-v(vout))-(1-((time gt 200u) and (time lt 250u)))*1e3)",
     "stress_xmn1_vds_v": "maximum(abs(v(xdut.a)-v(vin)))",
     "stress_xmn1_vgs_v": "maximum(abs(v(xdut.b)-v(vin)))",
     "stress_xmn1_vdb_v": "maximum(abs(v(xdut.a)-0))",
@@ -44,14 +45,17 @@
     "stress_xmp2_vgb_v": "maximum(abs(v(xdut.a)-v(vout)))"
   },
   "checks": {
+    "vout_step_to_10ma_ramp_min_v": {
+      "min": 4.5
+    },
+    "vout_step_to_10ma_ramp_max_v": {
+      "max": 5.5
+    },
     "vout_step_to_10ma_post_min_v": {
       "min": 4.5
     },
     "vout_step_to_10ma_post_max_v": {
       "max": 5.5
-    },
-    "vds_peak_pmos_during_step_v": {
-      "max": 6.0
     },
     "stress_xmn1_vds_v": {
       "max": 6.0,

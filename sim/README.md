@@ -9,7 +9,7 @@ sim-harness-core (see `harness/README.md`) plus `harness/pump_evidence.py`.
 |---|---|---|
 | `device-stress/` | per-device Vds/Vgs/Vdb/Vsb/Vgb maxima over the full transient vs the rating, at full load | `testbench/` |
 | `load/` | steady Vout and ripple into a resistive load (10 mA at 4.5 V) | `testbench/` |
-| `load-step/` | Vout min/settled and peak Vds through a 10 us ramp to full load | `testbench/` |
+| `load-step/` | Vout min and max during and after the 10 µs resistive load ramp, settled mean, and per-device terminal stress throughout startup, the ramp and settling | `testbench/` |
 | `startup/` | enable-to-4.5 V time at full load | `testbench/` |
 | `cap-model/` | flying-cap model extraction (MIM vs MOS cap); `records/` is append-only | `extract.py` |
 
@@ -27,6 +27,8 @@ means editing `dut_reference.spice` and `DEVICES`.
 Placeholders (flagged in `generate.py`; change a value when #1 ratifies): 6.0 V
 device rating (**unconfirmed**; the PDK names these "6.0V" devices and carries no numeric rating, so the name-plate is used unpadded), ripple limit,
 start-up time limit.
+
+The [clock and capacitor feasibility experiment](clock-cap-screen/README.md) measures an enabled transistor oscillator, flying-plate and reservoir stress, and a GF180D capacitor packing coupon against proposed S7/S8.
 
 ## Records
 
