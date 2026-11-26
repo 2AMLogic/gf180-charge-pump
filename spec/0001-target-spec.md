@@ -104,7 +104,8 @@ Source: the PDK ngspice models, `gf180mcuD/libs.tech/ngspice/sm141064.ngspice`
   **between plates** is inapplicable, including its rejection of the
   1.5 fF/µm² model on that basis. GF180MCU-D selects the 2 fF/µm² MIM option
   in its installed `.config/nodeinfo.json`. The 0.5 V reservoir margin is
-  conditional on the VOUT limit holding at every instant.
+  conditional on the VOUT limit holding at every instant. [Corrected model
+  extraction and plate ratings](../sim/cap-model/records/20261126-064748.md)
 - MOS capacitors (`cap_nmos_06v0`): C is bias-dependent,
   `c = A·(0.001107 + 0.00107·tanh(6.25·V − 4.1875))` F/m² per the model —
   **0.04 fF/µm² at V = 0 V** (0.0375 fF/µm²), **1.11 fF/µm² at the V = 0.67 V

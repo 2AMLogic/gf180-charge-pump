@@ -16,11 +16,8 @@ from harness import pdk as pdkmod
 
 SIM = Path(__file__).resolve().parent.parent
 NGSPICE = "ngspice"
-#: Voltage ratings quoted in the PDK model header (sm141064.spice, "usable for
-#: Volt <= N across capacitor"). The flying cap of a doubler sees ~2x Vin.
-MIM_RATING_V = {"1f0": 20.0, "1f5": 6.0}
-VIN_MAX_V = 3.3 * 1.10
-FLY_CAP_V = 2 * VIN_MAX_V
+# Differential MIM ratings in the pinned sm141064.ngspice device list.
+MIM_RATING_V = {"1f0": 20.0, "1f5": 6.0, "2f0": 6.0}
 
 
 def deck(p, device_lines, bias):
@@ -39,11 +36,6 @@ print m_cap
 .endc
 .end
 """
-
-
-def rating(limit_v):
-    verdict = "OK" if FLY_CAP_V <= limit_v else "**DISQUALIFIED**"
-    return f"<= {limit_v:g} V across cap (PDK header); doubler flying cap sees ~{FLY_CAP_V:.1f} V at 3.63 V supply: {verdict}"
 
 
 def measure(p, dev, bias):
@@ -70,18 +62,18 @@ def main():
     a = ap.parse_args()
     p = pdkmod.find_pdk(SIM)
     rows = []
-    mim = "xc a 0 cap_mim_1f0_m2m3_noshield c_length={l}u c_width={w}u"
-    c1 = measure(p, mim.format(l=20, w=20), 0)
-    c2 = measure(p, mim.format(l=40, w=40), 0)
-    # C = cox*A + capsw*P  -> solve for the two terms
+    # C = cox*A + capsw*P for these two square plates (µm and µm²).
     a1, p1, a2, p2 = 400, 80, 1600, 160
-    cox = (c1 * p2 - c2 * p1) / (a1 * p2 - a2 * p1)
-    capsw = (c1 - cox * a1) / p1
-    rows.append(("MIM cap_mim_1f0_m2m3_noshield (1 fF/um2 option)", f"{cox*1e15:.4f} fF/um2 area, {capsw*1e15:.3f} fF/um perimeter", "ac 1 kHz, 20x20 and 40x40 um, solved for area+perimeter", rating(MIM_RATING_V["1f0"])))
-    mim15 = "xc a 0 cap_mim_1f5_m2m3_noshield c_length={l}u c_width={w}u"
-    d1, d2 = measure(p, mim15.format(l=20, w=20), 0), measure(p, mim15.format(l=40, w=40), 0)
-    cox15 = (d1 * p2 - d2 * p1) / (a1 * p2 - a2 * p1)
-    rows.append(("MIM cap_mim_1f5_m2m3_noshield (1.5 fF/um2 option)", f"{cox15*1e15:.4f} fF/um2 area", "same method", rating(MIM_RATING_V["1f5"])))
+    for option, rating in MIM_RATING_V.items():
+        cell = f"cap_mim_{option}_m2m3_noshield"
+        c1 = measure(p, f"xc a 0 {cell} c_length=20u c_width=20u", 0)
+        c2 = measure(p, f"xc a 0 {cell} c_length=40u c_width=40u", 0)
+        cox = (c1 * p2 - c2 * p1) / (a1 * p2 - a2 * p1)
+        capsw = (c1 - cox * a1) / p1
+        rows.append((f"MIM {cell}", f"{cox*1e15:.4f} fF/um2 area, "
+                     f"{capsw*1e15:.3f} fF/um perimeter",
+                     "AC 1 kHz at 0 V, 20x20 and 40x40 um",
+                     f"<= {rating:g} V between plates (PDK model header)"))
     for bias in (0.0, 1.0, 3.3, 5.0):
         c = measure(p, f"xc a 0 cap_nmos_06v0 c_length=10u c_width=10u", bias)
         rows.append((f"MOS cap cap_nmos_06v0, 10x10 um, terminal-1 bias {bias:g} V", f"{c/100*1e15:.4f} fF/um2", "ac 1 kHz at DC bias", "6 V device (name-plate; no separate cap rating in the PDK)"))
@@ -89,9 +81,15 @@ def main():
     md = [f"# Flying-capacitor model extraction -- {when:%Y-%m-%d %H:%M}Z", "",
           f"PDK: {p.variant}@{p.version}; ngspice: {ngspice_version()}",
           "Corner: typical model sections at ngspice's default 27 C (a model-parameter extraction; the PDK's passive models carry their own corner sections, not swept here, and this is independent of the block's -40/25/125 C PVT grid).", "",
-          "Supersedes `20261125-014217.md`, which reported densities without each option's voltage rating. "
-          "The rating decides the flying-cap choice: the denser 1.5 fF/um2 option is usable only to 6 V across the cap.", "",
-          "| device | extracted | method | voltage rating vs. expected flying-cap voltage |", "|---|---|---|---|"]
+          "Supersedes the voltage interpretation in [the November 25 record](20261125-020745.md). "
+          "The pinned GF180MCU-D node configuration selects MIM_2P0. The other capacitor models "
+          "are included for comparison.", "",
+          "The ratings below apply to the voltage difference between plates. In the idealized boost phase, "
+          "a 7.26 V top plate and a 3.63 V bottom plate give 3.63 V across the flying capacitor. "
+          "A reservoir connected from 5.5 V VOUT to ground has 5.5 V across it. These are "
+          "illustrative terminal pairs; the AC extraction does not measure switching stress. "
+          "Check the two terminal waveforms during startup, switching and load release.", "",
+          "| device | extracted | method | differential voltage rating |", "|---|---|---|---|"]
     md += [f"| {a} | {b} | {c} | {d} |" for a, b, c, d in rows]
     md += ["", "Bottom-plate parasitic: **not present in the PDK MIM or MOS-cap models** (two-terminal subcircuits, no substrate node), "
            "so no bottom-plate ratio can be extracted from simulation. The DUT's `cp_ratio` is therefore a placeholder until a "
