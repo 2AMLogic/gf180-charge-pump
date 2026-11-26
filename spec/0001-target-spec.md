@@ -1,6 +1,6 @@
 # 0001 — Target specification for the on-die program-supply charge pump
 
-Status: proposed
+Status: RATIFIED on merge
 
 Issue: #1. Classification: changes spec rows and bounds, so both the EE review
 and the market review apply (CLAUDE.md, Ratification).
@@ -261,9 +261,10 @@ EN is low, VOUT must not back-drive VDD.
 
 ## 7. Ratification
 
-- This PR opens with `Status: proposed`.
-- Rows proposed for ratification: S1-S9 as above. The stretch rows are not
-  proposed.
-- Reviews required: EE and market, distinct, neither the PR author nor the
-  designer, each recorded against the head that carries the final status line.
-  Reviewer files stay out of this repo.
+Rows S1–S9 are ratified on merge. Until then they are proposed targets.
+Stretch rows are outside this decision.
+
+Two independent reviewers, one EE and one market, review the same commit.
+Neither reviewer may have authored the PR or the design. The operator then
+approves that commit and `2am/ratification` must pass before merge. A new
+commit requires both reviews and operator approval again.

@@ -70,7 +70,11 @@ result. Where the agents hit friction with the open-source tooling — most ofte
 filed as a public issue against the tool itself, so the fix benefits everyone
 using gf180mcu, not just this repo.
 
-## Target specification (PROPOSED — see [spec/0001-target-spec.md](spec/0001-target-spec.md), issue #1)
+## Target specification
+
+The target column takes effect on merge of the independently reviewed,
+operator-approved [specification](spec/0001-target-spec.md) for issue #1.
+The stretch column lists goals outside that decision.
 
 | Parameter | Target | Stretch |
 |---|---|---|
