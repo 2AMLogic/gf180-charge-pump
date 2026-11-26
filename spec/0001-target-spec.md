@@ -28,7 +28,7 @@ Every output-voltage row states its load current and corner.
 | S3 | Load current | ≥ 10 mA, continuous for ≥ 10 µs | at S2 voltage, worst corner | inherited A2/A3 |
 | S4 | Enable to output in spec | ≤ 10 µs | I_load = 0 → 10 mA step after settle, worst corner | README draft; §3 shows reservoir charge is small against this |
 | S5 | Output ripple | ≤ 100 mV p-p | I_load = 10 mA, worst corner | README draft; sets output capacitance (§3) |
-| S6 | Device stress | no device above its rated Vds / Vgs / Vdb, any node, transients included | all corners, VDD = 3.63 V is the worst case | §4 |
+| S6 | Device stress | all gate, drain-source and body-junction differentials within §4 limits, transients included | all corners, including unloaded and switching at VDD = 3.63 V | §4 |
 | S7 | Core area (footprint including all capacitors) | **≤ 0.50 mm²** (draft: 0.25 mm²) | n/a | §3; **proposed change to a draft row** |
 | S8 | No-load behaviour | output ≤ 5.5 V with EN high and no load | VDD = 3.63 V, hot and cold | §4; an unloaded doubler reaches 2·VDD = 7.26 V |
 | S9 | PVT corners | as in S2 | n/a | README draft |
@@ -50,10 +50,14 @@ gives way. No row is claimed reachable beyond what §3 supports.
 
 ### What the pump commits to if A1-A3 move
 
-- **A2 (current) rises to I′:** S2 stays 4.5 V minimum. The output-resistance
-  budget scales as R_out ≤ 1.44 V / I′ (§3), and capacitance, hence area, scales
-  about linearly with I′ at fixed clock rate. Up to 15 mA is a re-sizing within
-  this record; above 15 mA needs a new record.
+- **A2 (current) rises:** 10 mA is the commitment under S2/S3/S5/S7.
+  At 15 mA and 2.97 V, the 1.44 V headroom gives 96 Ω total and 48 Ω
+  for the slow-switching limit under §3.1's equal split. At 100 MHz the
+  minimum-corner capacitances are 208.3 pF flying and 750 pF reservoir.
+  At 1.791 fF/µm² their plates alone occupy **0.5351 mm²**, above S7.
+  Even with zero switch and routing area the minimum clock would exceed
+  107 MHz. A higher current therefore requires a new decision checking
+  achievable clock over PVT, full footprint, ripple and terminal stress.
 - **A3 (duration) shortens or lengthens:** the continuous pump is unchanged,
   because it is sized for continuous current. A duration short enough to make a
   pulsed reservoir viable is the separate candidate in §3.2, not a change to
@@ -94,7 +98,13 @@ Source: the PDK ngspice models, `gf180mcuD/libs.tech/ngspice/sm141064.ngspice`
   5.5 V at the S2/S8 limit, leaving 0.5 V to the stated 6 V limit. Verify
   the differential voltage across each capacitor during startup, switching
   and load release for the chosen circuit. The topology record also needs
-  the bottom-plate parasitic to substrate.
+  the bottom-plate parasitic to substrate. The [November 25 extraction
+  record](../sim/cap-model/records/20261125-020745.md) measured densities at
+  AC small signal. Its comparison of 7.3 V **to ground** with a rating
+  **between plates** is inapplicable, including its rejection of the
+  1.5 fF/µm² model on that basis. GF180MCU-D selects the 2 fF/µm² MIM option
+  in its installed `.config/nodeinfo.json`. The 0.5 V reservoir margin is
+  conditional on the VOUT limit holding at every instant.
 - MOS capacitors (`cap_nmos_06v0`): C is bias-dependent,
   `c = A·(0.001107 + 0.00107·tanh(6.25·V − 4.1875))` F/m² per the model —
   **0.04 fF/µm² at V = 0 V** (0.0375 fF/µm²), **1.11 fF/µm² at the V = 0.67 V
@@ -189,16 +199,26 @@ Reading:
 
 ## 4. Device ceiling and stress arguments
 
-Ceiling: `nfet_06v0` and `pfet_06v0`, treated here as 6.0 V on Vds, Vgs and Vdb
-(inferred from the 6.0 V device class named in the PDK device list; per-terminal
-Vds/Vgs/Vdb limits are **not** in the model files). The PDK's per-terminal
-rating table is not reproduced in this record; the device-stress bench (#2) must
-take the limits from the PDK documentation and check every node, transients
-included. **This is an open item, not a verified rating.**
+For the 6 V process option, the foundry specifies 6 V DC between the
+thick-oxide gate and any other FET terminal. Drain hot-carrier limits
+depend on voltage, conduction time and direction. The manual treats periodic
+gate overvoltage separately and requires lifetime and duty-cycle evidence.
+This block takes no periodic-overvoltage credit. [GF180 chip operating
+conditions, §§14.1.2–14.1.4](https://gf180mcu-pdk.readthedocs.io/en/latest/physical_verification/design_manual/drm_14_1.html)
 
-- The output upper bound S2/S8 (5.5 V) is set so no 6.0 V device on the output
-  net exceeds its rating with 0.5 V of margin; margin policy for internal
-  nodes is left to the topology record.
+For the selected circuit, measure each device's absolute Vgs, Vgd, Vgb and
+Vds, and the signed drain–body and source–body junction differentials, across
+startup, switching, no load, load steps, disable and every specified PVT
+corner. Apply a 6.0 V project ceiling to these magnitudes, and enforce any
+tighter applicable hot-carrier, oxide or junction limit, including forward
+bias in the actual well connection. The 6.0 V ceiling is a conservative
+screen. Junction ratings, polarity, terminal waveforms and compliance still
+require evidence for the selected devices.
+
+- S2/S8 limit VOUT relative to VSS. For the VOUT-to-ground reservoir they
+  imply at most 5.5 V between plates while those bounds hold. A transistor
+  connected to VOUT also has independently moving gate, source, drain and
+  body potentials. Evaluate those differences directly.
 - `nfet_10v0_asym` stays excluded: the PDK's own KLayout PCell fails the native
   deck (`CO.4`, `DF.6_MV`, `PL.4_MV`) at default settings. Using it needs its
   own decision record. Outputs above about 6 V are out of scope.
@@ -209,25 +229,26 @@ included. **This is an open item, not a verified rating.**
 All figures use VDD = 3.63 V, the high corner; V_d ≈ 0.7 V is an assumed diode
 or Vth drop, unsourced.
 
-- **Cross-coupled (latched) doubler.** Unloaded, the output tends toward
-  2·VDD = 7.26 V, above 6.0 V. It therefore needs an output limiter (S8) that
-  holds Vout ≤ 5.5 V, for example by gating the clock. With the output held at
-  ≤ 5.5 V, the cross-coupled pair's Vds and Vgs are bounded by Vout and stay
-  under 6.0 V. The limiter's own response time against a load release is a
-  transient stress item for #2.
-- **Dickson (diode-connected chain).** Each stage adds about (Vclk − V_d). At
-  the low corner (2.97 V) one stage gives about 2.97 + (2.97 − 0.7) = 5.2 V
-  unloaded, so 10 mA load collapses it below 4.5 V; two stages are needed, and
-  then the unloaded output is about 3.63 + 2 × (3.63 − 0.7) = 9.5 V, far above
-  the ceiling. The last-stage node also reaches about Vout + V_d, i.e. up to
-  about 6.2 V when Vout is at 5.5 V, which exceeds 6.0 V on Vdb or Vds. It
-  needs both a limiter and a lower Vout cap, and it pays diode drops; the
-  weakest candidate on stress and efficiency.
-- **Pulsed bootstrap.** The top plate peaks at about 2·3.63 − 0.7 ≈ 6.6 V at
-  the high corner (the issue comment gives ~6.7 V), above 6.0 V and above S8.
-  It needs a clamp or limiter, and the device-stress bench (#2) must cover this
-  transient. The half-bridge sees at most VDD. Diode reverse voltage is about
-  6.6 − 3.63 ≈ 3 V.
+- **Cross-coupled (latched) doubler.** A flying plate initially at 3.63 V
+  with its bottom plate at ground can approach 7.26 V to ground as the bottom
+  plate rises to 3.63 V. The flying capacitor can retain ~3.63 V between
+  plates in the same interval. A disconnected internal node may reach this
+  peak while the VOUT limiter is still holding 5.5 V. Use the chosen switch
+  and well connections to check every terminal differential, including the
+  phase overlap and the first cycles after the load disappears. Verify the
+  limiter's response at VOUT separately.
+- **Dickson (diode-connected chain).** With a 0.7 V drop per stage, one
+  stage gives about 5.2 V unloaded at 2.97 V input. Its loaded voltage must
+  be simulated. A two-stage chain could approach 9.5 V unloaded at 3.63 V.
+  An internal stage feeding a 5.5 V output through a forward-biased diode
+  can be near 6.2 V to ground. Determine the actual Vds, gate and junction
+  voltages from the selected circuit and check limiting or isolation for
+  each internal stage.
+- **Pulsed bootstrap.** The top plate can approach 2·3.63 − 0.7 ≈ 6.6 V to
+  ground. At a bottom-plate potential of 3.63 V this corresponds to about
+  3.0 V across that ideal flying cap. Apply S8 to VOUT and check the
+  half-bridge, diode and other devices against S6 during charge, boost and
+  load release.
 - **Clocking: internal oscillator vs external clock.** A 3.3 V-only shuttle pad
   ring gives no spare pin guarantee, and a pump that needs an external clock
   moves a speed-critical signal across a pad. Proposal: internal oscillator is
@@ -247,8 +268,8 @@ follow-on record with simulated evidence.
   credit for that placement. [Native array DRC report](https://github.com/2AMLogic/gf180-efuse-otp/blob/fa9bcc4b104b6fa2eebc3d481856b1b0615c7090/layout/drc-array.native.report.json) · [eFuse issue #60](https://github.com/2AMLogic/gf180-efuse-otp/issues/60)
 - The ≥ 100 MHz clock rate on 6 V devices at 2.97 V, and the 72 Ω switch
   budget, are assumptions for the topology record to test.
-- The 6.0 V rated terminal voltages need to be taken from the PDK documents
-  by #2.
+- The chosen devices' junction and drain constraints, actual body connections
+  and transient terminal extrema remain to be verified under §4.
 - MIM density is taken from the simulation model, not a measured wafer value;
   the model's own corner spread is ±10%.
 
