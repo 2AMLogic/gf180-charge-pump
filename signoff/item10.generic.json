@@ -3,14 +3,14 @@
   "kind": "generic",
   "status": "pass",
   "t1_item": 10,
-  "summary": "T1 item 10 (Repo hygiene): 11/11 attestation checks passed (klt signoff --attest)",
+  "summary": "T1 item 10 (Repo hygiene): 12/12 attestation checks passed (klt signoff --attest)",
   "source": "signoff/item10.json",
   "attestation": {
     "producer": "klt signoff --attest",
     "inventory_schema_version": 1,
     "hash_algorithm": "sha256-raw-bytes",
-    "check_count": 11,
-    "passed_count": 11,
+    "check_count": 12,
+    "passed_count": 12,
     "checks": [
       {
         "check": "present",
@@ -31,7 +31,7 @@
         "role": "hygiene",
         "path": "README.md",
         "passed": true,
-        "content_hash": "sha256:62796df6697d9798533c51692e1985d8d31bbbf3a2700b9103f9f22045804a3d"
+        "content_hash": "sha256:c26175737b0f33e450adf9dad7db2eab227a9790df670a69b64388a5e290d739"
       },
       {
         "check": "present",
@@ -76,6 +76,13 @@
         "content_hash": "sha256:cdd74c213fb089d1a60d4d075b393a6ab1fc0beb763281656dc5dc3edc7b200c"
       },
       {
+        "check": "present",
+        "role": "hygiene",
+        "path": "spec/0001-target-spec.md",
+        "passed": true,
+        "content_hash": "sha256:a0c80e303789c07964341552988607bb0c1f7b6ce2ed82f8b215856af5068c42"
+      },
+      {
         "check": "command",
         "role": "audit",
         "name": "simulation gate rejects missing tools when CI requires simulation",
@@ -118,7 +125,7 @@
         "path": "signoff/item10.json",
         "scope": "repo"
       },
-      "content_hash": "sha256:bf096347b7b3385545e279b6ee0e5376b5eccd95ea26aa52f9e31e0b5a80d838"
+      "content_hash": "sha256:320a30f1f791dde77df7b0195c10dffd216a973899adf209d4b4f43d10025435"
     }
   }
 }

@@ -45,7 +45,7 @@
         "role": "testbench",
         "path": "sim/cap-model/extract.py",
         "passed": true,
-        "content_hash": "sha256:43d10eb4b6592b80209f60f553b800d361f8f77de5677a1ad2a20ae934f237c5"
+        "content_hash": "sha256:78bb54b0132fe47c3b46b12bdb42e666f16c13cb670789ddc82f1cbddc36f255"
       },
       {
         "check": "present",
