@@ -53,6 +53,18 @@ The disturbance is a 10 mA increase from 5 to 15 mA in 1 ns. The peak result is 
 
 The former 5.45 V threshold experiment bracketed the release limit with a frequency-independent 2–4 Ω shunt. Its on-slope does not describe this transistor circuit at switching frequencies. The actual shunt's setpoint, reservoir and driver response all enter the integrated transient. The bare shunt measurements also include 5 mA and 30 mA AC bias and six frequencies up to 300 MHz. [Parent impedance control](https://github.com/2AMLogic/gf180-charge-pump/pull/65#issuecomment-7197046055) · [Stand-alone shunt bench](impedance.py) · [Measurements](records/impedance.json)
 
+## Host programming pulses
+
+The [transient runner](host_pulses.py) drives the transistor pump with three consecutive 10 mA flat-top loads. Each has 1 ns leading and trailing edges. The simulation includes startup, short recovery intervals and a final enabled-idle window. Cases are typical/25 °C/3.30 V, slow/125 °C/2.97 V and fast MOS with slow MIM/−40 °C/3.63 V. The third case uses fast resistor and bipolar sections. Release is the maximum during the first microsecond following the flat top. Efficiency is the ratio of mean load power to mean input power over each flat top. [Signed source measurements and circuit hashes](records/host-pulses.json) · [Raw ngspice 46 output for all three cases](records/host-pulses)
+
+| Flat top | Loaded voltage across three corners | Highest release | Loaded efficiency |
+|---|---:|---:|---:|
+| 1 µs | 4.69170–5.11905 V | 5.39415 V | 19.41–59.49% |
+| 10 µs | 4.69170–5.12874 V | 5.39402 V | 19.43–58.71% |
+| 100 µs | 4.69170–5.13361 V | 5.39416 V | 19.43–58.64% |
+
+Across those conditions, 9/9 pulses stay within the proposed loaded voltage range and below or at the release ceiling. The largest final-idle input and shunt power were 250.27 mW and 131.54 mW. The applied load is an ideal current sink representing the host demand. Routing parasitics, electrothermal effects, the actual eFuse program path and the remaining PVT combinations need their own checks.
+
 ## Capacitor floorplan
 
 The GF180D PCell coupon contains 241 squares of 40 µm, one of 26 µm, one of 20 µm and three of 8 µm. All physical MIMs from both schematics are included. The active plate area is 0.386868 mm². Their 19-column placement measures **804.4 × 550.0 µm, or 0.442420 mm²**. The remaining 0.057580 mm² of the 0.50 mm² proposal would have to accommodate the MOS devices, PNPs, resistors, routing, guards and fill. The array is unwired. It has no full-core LVS or current-handling result.
@@ -69,6 +81,7 @@ python3 sim/active-regulation/screen.py pvt
 python3 sim/active-regulation/screen.py controls
 python3 sim/active-regulation/screen.py isolation
 python3 sim/active-regulation/impedance.py
+python3 sim/active-regulation/host_pulses.py --jobs 3 --log-dir /tmp/pump-host-pulses
 uv run --no-project --with 'klayout==0.30.14' python sim/active-regulation/coupon.py /tmp/active-reg-coupon.gds
 uv run --no-project --python 3.12 --with 'klayout-tools==0.9.2' --with 'klayout==0.30.14' python sim/active-regulation/check_coupon.py /tmp/active-reg-coupon.gds
 ```
