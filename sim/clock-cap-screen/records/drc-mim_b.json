@@ -1,0 +1,147 @@
+{
+  "schema_version": 3,
+  "file": {
+    "path": "sim/clock-cap-screen/records/cap-coupon.gds",
+    "scope": "repo"
+  },
+  "deck": "gf180mcuD/libs.tech/klayout/tech/drc/gf180mcu.drc",
+  "engine": "klayout",
+  "dbu_um": 0.001,
+  "status": "clean",
+  "violation_count": 0,
+  "rule_counts": {},
+  "coverage": {
+    "deck_layers": [],
+    "layers_checked": [],
+    "rule_categories": [
+      "MIMTM.1",
+      "MIMTM.10",
+      "MIMTM.11",
+      "MIMTM.2",
+      "MIMTM.3",
+      "MIMTM.4",
+      "MIMTM.5",
+      "MIMTM.6",
+      "MIMTM.7",
+      "MIMTM.8a",
+      "MIMTM.8b",
+      "MIMTM.9"
+    ],
+    "rules_checked": [
+      "MIMTM.1",
+      "MIMTM.10",
+      "MIMTM.11",
+      "MIMTM.2",
+      "MIMTM.3",
+      "MIMTM.4",
+      "MIMTM.5",
+      "MIMTM.6",
+      "MIMTM.7",
+      "MIMTM.8a",
+      "MIMTM.8b",
+      "MIMTM.9"
+    ],
+    "layers_in_stream_without_rules": [],
+    "rules_skipped": [],
+    "voltage_domain_warnings": [],
+    "unchecked_rules": [],
+    "deck_scope": [],
+    "unmodeled_rules": [],
+    "isolation_only_rules": [],
+    "schema_version": 1,
+    "known": true,
+    "checked": [
+      "MIMTM.1",
+      "MIMTM.10",
+      "MIMTM.11",
+      "MIMTM.2",
+      "MIMTM.3",
+      "MIMTM.4",
+      "MIMTM.5",
+      "MIMTM.6",
+      "MIMTM.7",
+      "MIMTM.8a",
+      "MIMTM.8b",
+      "MIMTM.9"
+    ],
+    "skipped": [],
+    "inapplicable": [],
+    "unknown": [],
+    "nothing_checked": false,
+    "nothing_checked_reasons": []
+  },
+  "violations": [],
+  "coverage_assertion": {
+    "kind": "expected_rule_category_names",
+    "expected_names": [
+      "MIMTM.1",
+      "MIMTM.10",
+      "MIMTM.11",
+      "MIMTM.2",
+      "MIMTM.3",
+      "MIMTM.4",
+      "MIMTM.5",
+      "MIMTM.6",
+      "MIMTM.7",
+      "MIMTM.8a",
+      "MIMTM.8b",
+      "MIMTM.9"
+    ],
+    "observed_names": [
+      "MIMTM.1",
+      "MIMTM.10",
+      "MIMTM.11",
+      "MIMTM.2",
+      "MIMTM.3",
+      "MIMTM.4",
+      "MIMTM.5",
+      "MIMTM.6",
+      "MIMTM.7",
+      "MIMTM.8a",
+      "MIMTM.8b",
+      "MIMTM.9"
+    ],
+    "missing_names": [],
+    "unexpected_names": [],
+    "satisfied": true
+  },
+  "provenance": {
+    "klt_version": "0.9.2",
+    "klt_git_commit": "046ba74652fc096bd97071fc3237f7159dd40183",
+    "klt_reinstall_spec": "klayout-tools==0.9.2",
+    "klayout_version": "0.30.14",
+    "pdk": {
+      "name": "gf180mcuD",
+      "source": "--pdk-root flag",
+      "version": "open_pdks f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7"
+    },
+    "deck": {
+      "name": "gf180mcu.drc",
+      "content_hash": "sha256:e7c7d2597890cfcb4cf0e5312f5652051a119fb3e1cc1772a6e5c04594bc65d8",
+      "released": false,
+      "options": {
+        "variant": "D",
+        "decks": "mim_b",
+        "threads": "1"
+      },
+      "tree": {
+        "file_count": 6,
+        "content_hash": "sha256:8af3b4875893f3ffbff639bd7e2966c5e3b9b27f70d03e86d6da46ca9510fbc4",
+        "release": null
+      }
+    },
+    "input": {
+      "content_hash": "sha256:6823545c4b6d8b71d6cadc14623c217eef3f61eabb0e18c9f09f60ef0be1cabf",
+      "role": "layout"
+    },
+    "klayout_version_mismatch": true
+  },
+  "native_deck": {
+    "kind": "pdk_main_script",
+    "variant": "gf180mcuD",
+    "deck_file": "gf180mcuD/libs.tech/klayout/tech/drc/gf180mcu.drc",
+    "deck_vars_defaulted": {},
+    "min_klayout_version": "0.30.9",
+    "min_klayout_version_defaulted": true
+  }
+}
