@@ -1,0 +1,74 @@
+* GF180D bandgap, driver supply regulator and output shunt, powered from VIN.
+.subckt mn3 d g s b params: width=8u len=0.6u copies=1
+xt d g s b nfet_03v3 w={width} l={len} m={copies} ad={width*.18u} as={width*.18u} pd={2*(width+.18u)} ps={2*(width+.18u)}
+.ends
+.subckt mp3 d g s b params: width=16u len=0.6u copies=1
+xt d g s b pfet_03v3 w={width} l={len} m={copies} ad={width*.18u} as={width*.18u} pd={2*(width+.18u)} ps={2*(width+.18u)}
+.ends
+.subckt n6reg d g s b params: width=10u len=0.7u copies=1
+xt d g s b nfet_06v0 w={width} l={len} m={copies} ad={width*.18u} as={width*.18u} pd={2*(width+.18u)} ps={2*(width+.18u)}
+.ends
+.subckt poly a b params: units=5 wid=1u
+xr a b 0 ppolyf_u_1k r_width={wid} r_length={units*wid}
+.ends
+* Single-stage PMOS-input OTA with self-biased tail and NMOS mirror.
+.subckt ota plus minus out vin params: tail=6
+xtail vin s poly units={tail}
+xp1 m plus s vin mp3 width=60u len=2u
+xp2 out minus s vin mp3 width=60u len=2u
+xn1 m m 0 0 mn3 width=30u len=2u
+xn2 out m 0 0 mn3 width=30u len=2u
+.ends
+* Three matched mirror sources. Branch two uses an 8:1 emitter array.
+.subckt bandgap vin ref
+xctl small ptat err vin ota tail=10
+xpd gate err vin vin mp3 width=8u len=1u
+xnd gate err 0 0 mn3 width=8u len=1u
+* The DC gate bleed supplies a continuous startup path.
+xstart gate 0 poly units=700
+xp1 small gate vin vin mp3 width=8u len=2u
+xp2 ptat gate vin vin mp3 width=8u len=2u
+xp3 ref gate vin vin mp3 width=8u len=2u
+xsmall 0 0 small pnp_05p00x05p00
+xlarge0 0 0 big pnp_05p00x05p00
+xlarge1 0 0 big pnp_05p00x05p00
+xlarge2 0 0 big pnp_05p00x05p00
+xlarge3 0 0 big pnp_05p00x05p00
+xlarge4 0 0 big pnp_05p00x05p00
+xlarge5 0 0 big pnp_05p00x05p00
+xlarge6 0 0 big pnp_05p00x05p00
+xlarge7 0 0 big pnp_05p00x05p00
+xout 0 0 vf pnp_05p00x05p00
+xr1 ptat big poly units=5
+xr2 ref vf poly units=48
+xcomp err gate cap_mim_2f0_m4m5_noshield c_length=40u c_width=40u m=2
+xdec ref 0 cap_mim_2f0_m4m5_noshield c_length=26u c_width=26u
+.ends
+.subckt hpoly a b params: units=5 wid=1u
+xr a b 0 ppolyf_u_1k_6p0 r_width={wid} r_length={units*wid}
+.ends
+.subckt otan plus minus out vin params: tail=1.5
+xtail s 0 poly units={tail}
+xn1 m plus s 0 mn3 width=36u len=1u
+xn2 out minus s 0 mn3 width=36u len=1u
+xp1 m m vin vin mp3 width=60u len=1u
+xp2 out m vin vin mp3 width=60u len=1u
+.ends
+* Clock supply high-side PMOS LDO and its local GF180D MIM bypass.
+.subckt regdriver vin ref vr
+xtop vr fb poly units=14
+xbot fb 0 poly units=10
+xerr fb ref pg vin otan tail=1.25
+xcross pg vr cap_mim_2f0_m4m5_noshield c_length=20u c_width=20u
+xpass vr pg vin vin mp3 width=40u len=.28u copies=40
+xdec vr 0 cap_mim_2f0_m4m5_noshield c_length=40u c_width=40u m=16
+.ends
+* A low-side 6 V NMOS dissipates the excess output current. The feedback
+* divider sets the DC target and gate-to-output MIM compensates the loop.
+.subckt regshunt vin ref vout
+xhi vout fb hpoly units=32
+xlo fb 0 hpoly units=10
+xerr fb ref gate vin otan tail=.8
+xclamp vout gate 0 0 n6reg width=30u len=.7u copies=40
+xcomp gate vout cap_mim_2f0_m4m5_noshield c_length=40u c_width=40u m=2
+.ends

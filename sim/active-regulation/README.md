@@ -1,0 +1,51 @@
+# Charge pump with transistor-level output and clock-rail regulation
+
+This candidate replaces the prescribed oscillator supply and the 5.45 V behavioral shunt in the [clock and capacitor experiment](../clock-cap-screen/README.md). Its external sources are VIN, the logic enable, and the test load. A GF180D bandgap supplies two error amplifiers. One controls a PMOS series pass bank on the oscillator rail, and the other drives a 6 V NMOS output shunt. The proposed specification and topology are awaiting operator decisions. [Proposed S1–S9](https://github.com/2AMLogic/gf180-charge-pump/blob/2fe66388da3946c1eafd7b098cd5e20182a6992c/spec/0001-target-spec.md)
+
+## Circuit
+
+The bandgap uses ten 5 × 5 µm vertical PNP units in an explicit 1:8:1 ratio, a resistor-weighted PTAT voltage, and a 700-square poly startup bleed. The oscillator supply uses a 1,600 µm total-width thin-oxide PMOS with a local bank of sixteen 40 × 40 µm MIMs. The shunt uses a 1,200 µm total-width thick-oxide NMOS and a high-voltage poly 32:10 divider. The lower nominal output target, approximately 5.0 V, leaves headroom for the shunt's finite response. Both regulators draw current whenever VIN is applied. EN controls the oscillator. The parent switch widths, body ties, pump capacitors, assumed wiring and plate parasitics are retained. [Device circuit](regulators.spice) · [Integrated deck and probes](screen.py)
+
+## Integrated load and release
+
+At 3.30 V, typical process and 25 °C, the integrated candidate sustained a 4.98568 V floor through 10 µs at 10 mA. The maximum during load release was 5.07176 V. Its shunt dissipated 29.08 mW at full load and 79.00 mW at no load. The most forward-biased sampled MOS junction reached 0.895 V, and the thin-oxide family reached 3.30010 V drain-to-source. A separate 1 µs supply ramp with EN rising at 1.5 µs produced a 4.98577 V loaded floor and 5.07207 V release peak. [Nominal run](records/smoke.json) · [Half-step, supply-ramp and cross-passive controls](records/controls.json)
+
+The full screen measures 65 cases over the proposed MOS/temperature/VIN grid, with all three MIM corners at each high-input, hot/cold point. The resistor and bipolar corners track fast and slow MOS in the primary grid. The two crossed controls reverse both passive corners together. These simulations use Gear-2 and retain the greatest excursion of each gate, drain, source and body terminal pair over the complete 24 µs trace, together with the contributing instance. Positive body-forward values orient the junction for the MOS polarity. The 3.3 V and 6 V nameplates provide conservative comparisons; source/drain injection, lifetime, and current density require physical evidence. The circuit has no extracted well or interconnect resistance.
+
+## Output shunt response
+
+The disturbance is a 10 mA increase from 5 to 15 mA in 1 ns. The peak result is the positive output excursion divided by 10 mA. The AC result is the magnitude of the bare shunt impedance at 15 mA. Eleven runs cover the nominal point and each high-input, hot/cold MOS corner with its tracking passive models.
+
+| Measurement | Nominal | Range |
+|---|---:|---:|
+| Bare shunt, settled step (Ω) | 0.403 | 0.292–2.625 |
+| Bare shunt, peak step (Ω) | 20.396 | 16.288–26.975 |
+| With 109 reservoir MIMs, peak step (Ω) | 15.864 | 12.568–21.043 |
+| Bare shunt, 1 kHz (Ω) | 0.287 | 0.212–0.746 |
+| Bare shunt, 1 MHz (Ω) | 3.190 | 1.711–6.319 |
+| Bare shunt, 10 MHz (Ω) | 15.908 | 11.182–22.542 |
+| Bare shunt, 100 MHz (Ω) | 18.053 | 14.717–23.622 |
+
+The former 5.45 V threshold experiment bracketed the release limit with a frequency-independent 2–4 Ω shunt. Its on-slope does not describe this transistor circuit at switching frequencies. The actual shunt's setpoint, reservoir and driver response all enter the integrated transient. The bare shunt measurements also include 5 mA and 30 mA AC bias and six frequencies up to 300 MHz. [Parent impedance control](https://github.com/2AMLogic/gf180-charge-pump/pull/65#issuecomment-7197046055) · [Stand-alone shunt bench](impedance.py) · [Measurements](records/impedance.json)
+
+## Capacitor floorplan
+
+The GF180D PCell coupon contains 241 squares of 40 µm, one of 26 µm, one of 20 µm and three of 8 µm. All physical MIMs from both schematics are included. The active plate area is 0.386868 mm². Their 19-column placement measures **804.4 × 550.0 µm, or 0.442420 mm²**. The remaining 0.057580 mm² of the 0.50 mm² proposal would have to accommodate the MOS devices, PNPs, resistors, routing, guards and fill. The array is unwired. It has no full-core LVS or current-handling result.
+
+The native MIM-B run checked all 12 rule categories and returned zero violations. Full native GF180D DRC checked 768 categories and reported five individual markers, DCF.1b, M1.4, M2.4, M3.4 and PL.8. The full coverage assertion accounts for the 763 empty-layout declarations and these five geometry-conditional density declarations. KLT 0.9.2 records KLayout 0.30.14 as a version mismatch to its tested 0.30.12; the exact engine and deck hashes are preserved. [Coupon GDS](records/capacitors.gds) · [DRC receipts](records/coupon-drc.json)
+
+## Reproduce
+
+Use the repository's GF180MCU-D open_pdks build `f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7`, ngspice 46, and a Python 3 environment. Set `GF180_PDK_PATH` to the variant directory. Both SPICE programs check the four model-file hashes. The core and regulator hashes identify the integrated circuit. Run the following from the repository root. The default is one simulator worker, and `--jobs N` changes the number of parallel corners.
+
+```sh
+python3 sim/active-regulation/screen.py smoke
+python3 sim/active-regulation/screen.py pvt
+python3 sim/active-regulation/screen.py controls
+python3 sim/active-regulation/screen.py isolation
+python3 sim/active-regulation/impedance.py
+uv run --no-project --with 'klayout==0.30.14' python sim/active-regulation/coupon.py /tmp/active-reg-coupon.gds
+uv run --no-project --python 3.12 --with 'klayout-tools==0.9.2' --with 'klayout==0.30.14' python sim/active-regulation/check_coupon.py /tmp/active-reg-coupon.gds
+```
+
+Place native KLayout 0.30.14 on PATH for the DRC command. The coupon generator requires a fresh output path and disables GDS timestamps.
