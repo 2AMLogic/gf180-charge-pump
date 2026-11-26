@@ -62,8 +62,10 @@ gives way. No row is claimed reachable beyond what §3 supports.
   because it is sized for continuous current. A duration short enough to make a
   pulsed reservoir viable is the separate candidate in §3.2, not a change to
   S3.
-- **A1 (voltage) moves down:** covered by the trim/limit input (§6). **Above
-  5.5 V:** out of scope (§4).
+- **A1 (voltage) changes:** S2 covers the stated output band of 4.5–5.5 V.
+  A requirement for a regulated lower setpoint needs a new decision; the
+  programmable range in §6 is a stretch goal. Outputs above 5.5 V remain
+  outside this decision (§4).
 - Any change to A1-A3 in gf180-efuse-otp is tracked by that repo's decision
   records; this repo does not edit them.
 
