@@ -5,6 +5,7 @@
   "description": "Block README, reproduction instructions, licence, CI and the simulation gate used by CI.",
   "hygiene": [
     "README.md",
+    "spec/0001-target-spec.md",
     "LICENSE",
     "signoff/README.md",
     "signoff/check.sh",
