@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "kind": "t1-attestation-inventory",
+  "t1_item": 9,
+  "description": "One TT/25 C/3.3 V point on the reference doubler for each bench, plus the pinned capacitor-model extraction. This attests reproducibility, not DUT compliance.",
+  "testbenches": [
+    "signoff/cold_start.py",
+    "sim/benches/dut_reference.spice",
+    "sim/benches/generate.py",
+    "sim/benches/single_point.py",
+    "sim/cap-model/extract.py",
+    "sim/device-stress/testbench/netlist.spice",
+    "sim/device-stress/testbench/tb.json",
+    "sim/harness/__init__.py",
+    "sim/harness/cli.py",
+    "sim/harness/corners.py",
+    "sim/harness/evidence.py",
+    "sim/harness/pdk.py",
+    "sim/harness/pump_evidence.py",
+    "sim/harness/report.py",
+    "sim/harness/runner.py",
+    "sim/harness/simgate.py",
+    "sim/harness/strict_json.py",
+    "sim/harness/testbench.py",
+    "sim/harness/toolchain.py",
+    "sim/load-step/testbench/netlist.spice",
+    "sim/load-step/testbench/tb.json",
+    "sim/load/testbench/netlist.spice",
+    "sim/load/testbench/tb.json",
+    "sim/pdk.json",
+    "sim/startup/testbench/netlist.spice",
+    "sim/startup/testbench/tb.json"
+  ],
+  "cold_start": {
+    "argv": [
+      "python3",
+      "signoff/cold_start.py"
+    ]
+  },
+  "pins": {
+    "pdk": {
+      "name": "gf180mcuD",
+      "revision": "f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7"
+    },
+    "tools": {
+      "ngspice": "47 (recorded model extraction); 45.2 also exercised by CI",
+      "klayout-tools": "0.9.2"
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "kind": "t1-attestation-inventory",
+  "t1_item": 10,
+  "description": "The block README, reproduction instructions, licence and CI job. Run the simulation and evidence-format tests with simulator-dependent cases required.",
+  "hygiene": [
+    "README.md",
+    "LICENSE",
+    "sim/README.md",
+    ".github/workflows/sim-tests.yml"
+  ],
+  "checks": [
+    {
+      "name": "required simulation and evidence-format suite",
+      "argv": [
+        "env",
+        "REQUIRE_SIM=1",
+        "python3",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "sim/tests",
+        "-t",
+        ".",
+        "-q"
+      ]
+    }
+  ]
+}

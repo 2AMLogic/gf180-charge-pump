@@ -59,6 +59,23 @@ check instead of skipping. CodeQL green alone says nothing about the suite;
 look for a green `sim-tests` check. Locally, without `REQUIRE_SIM`, the
 simulator-dependent tests skip.
 
+### Reproduce the T1 evidence
+
+From the repository root, install ngspice and a Python environment with
+\`python3 -m pip install ciel==3.3.0 -r signoff/requirements.txt\`, then run:
+
+\`\`\`sh
+export PDK_ROOT="$PWD/.pdk"
+ciel enable --pdk-family gf180mcu f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7
+bash signoff/check.sh
+\`\`\`
+
+The check runs the reference doubler at TT, 25 °C and 3.3 V on all four
+benches, repeats the capacitor-model extraction, runs the required simulation
+suite and checks the committed T1 report against the cited files. The report
+credits these two verification and repository items. Device implementation,
+layout and performance evidence for a selected topology are still open.
+
 ## Built agent-native
 
 Every specification, decision record, testbench, and line of documentation in

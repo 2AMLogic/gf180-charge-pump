@@ -39,7 +39,7 @@ jobs:
           echo "open_pdks rev: $OPEN_PDKS_REV"
       - name: Install gf180mcu PDK
         run: |
-          python3 -m pip install ciel==3.3.0
+          python3 -m pip install ciel==3.3.0 -r signoff/requirements.txt
           ciel enable --pdk-family gf180mcu "$OPEN_PDKS_REV"
           ls "$PDK_ROOT"
       - name: Run sim tests
@@ -49,3 +49,5 @@ jobs:
       - name: Fail on skipped tests
         run: |
           if grep -Eq '^(OK|FAILED) .*skipped=' test.log; then echo "tests were skipped"; exit 1; fi
+      - name: Reproduce T1 evidence and grade
+        run: bash signoff/check.sh
