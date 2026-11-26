@@ -315,5 +315,107 @@ class ScopeHeadingAlwaysPresent(unittest.TestCase):
         self.assertIn("Worst device-stress margin: 0.5 V", md)
 
 
+class WriteRecordFiles(unittest.TestCase):
+    """write_record persists the companion JSON record the Markdown scope
+    bullets point to (issue #46), append-only alongside the .md record."""
+
+    def _record(self, record_id):
+        from harness.runner import PointResult
+        tb = copy.deepcopy(testbench.load(SIM / "startup" / "testbench"))
+        tb.measure, tb.checks = {"vout_at_10ma_resistive_min_v": "x"}, {}
+        pts = corners.build_grid(corners.resolve_corners(["mos"]), [25.0], [3.3])
+        results = [
+            PointResult(point=pt, status="ok",
+                        measurements={"vout_at_10ma_resistive_min_v": 4.4 + 0.1 * i})
+            for i, pt in enumerate(pts)
+        ]
+        fake_pdk = pdk.Pdk(name="gf180", path=Path("/pdk/gf180mcuD"),
+                           variant="gf180mcuD", source="test", model_lib_rel="models")
+        return report.build_record(
+            tb, fake_pdk, pts, results, "ngspice-46", SIM.parent, record_id,
+            "2026-01-01T00:00:00Z", 1.0,
+            git={"commit": "testsha", "short": "testsha", "branch": "test", "dirty": False},
+        )
+
+    def test_writes_md_and_companion_json(self):
+        rid = "20260101-000000-testsha"
+        record = self._record(rid)
+        with tempfile.TemporaryDirectory() as td:
+            exp = Path(td)
+            md = exp / "records" / f"{rid}.md"
+            js = exp / "records" / f"{rid}.json"
+            self.assertEqual(report.write_record(record, exp), md)
+            data = json.loads(js.read_text())
+            self.assertEqual(data["record_id"], rid)
+            # the Markdown bullet points readers at the full per-point list;
+            # the JSON record must actually carry it, unsummarized
+            self.assertEqual(len(data["scope"]["output_lines"]), 5)
+            self.assertIn("scope.output_lines", md.read_text())
+            # private rendering keys are serialized nowhere
+            self.assertNotIn("_evidence_lines", data)
+            self.assertFalse([k for k in data if k.startswith("_")])
+            # the in-memory dict is untouched
+            self.assertIn("_evidence_lines", record)
+            self.assertEqual(len(record["scope"]["output_lines"]), 5)
+            # the .md file remains the finished-record marker
+            self.assertTrue(report.record_exists(exp, rid))
+
+    def test_second_write_refused_without_overwriting(self):
+        rid = "20260101-000001-testsha"
+        record = self._record(rid)
+        with tempfile.TemporaryDirectory() as td:
+            exp = Path(td)
+            report.write_record(record, exp)
+            md = exp / "records" / f"{rid}.md"
+            js = exp / "records" / f"{rid}.json"
+            before = (md.read_bytes(), js.read_bytes())
+            with self.assertRaises(report.RecordExists):
+                report.write_record(record, exp)
+            self.assertEqual((md.read_bytes(), js.read_bytes()), before)
+
+    def test_existing_md_refuses_without_orphan_json(self):
+        rid = "20260101-000002-testsha"
+        record = self._record(rid)
+        with tempfile.TemporaryDirectory() as td:
+            rec_dir = Path(td) / "records"
+            rec_dir.mkdir(parents=True)
+            (rec_dir / f"{rid}.md").write_text("prior record without a JSON companion\n")
+            with self.assertRaises(report.RecordExists):
+                report.write_record(record, rec_dir.parent)
+            self.assertFalse((rec_dir / f"{rid}.json").exists())
+
+    def test_orphan_json_blocks_ids_but_is_not_a_finished_record(self):
+        rid = "20260101-000003-testsha"
+        record = self._record(rid)
+        with tempfile.TemporaryDirectory() as td:
+            rec_dir = Path(td) / "records"
+            rec_dir.mkdir(parents=True)
+            (rec_dir / f"{rid}.json").write_text("{}\n")
+            with self.assertRaises(report.RecordExists):
+                report.write_record(record, rec_dir.parent)
+            self.assertFalse((rec_dir / f"{rid}.md").exists())
+            self.assertTrue(report._id_taken(rec_dir.parent, rid))
+            self.assertFalse(report.record_exists(rec_dir.parent, rid))
+
+    def test_id_taken_covers_md_json_and_spice(self):
+        with tempfile.TemporaryDirectory() as td:
+            exp = Path(td)
+            rec_dir = exp / "records"
+            rec_dir.mkdir(parents=True)
+            (exp / report.SNAPSHOT_DIR).mkdir()
+            md_rid, js_rid, spice_rid = (
+                "20260101-000004-testsha",
+                "20260101-000005-testsha",
+                "20260101-000006-testsha",
+            )
+            (rec_dir / f"{md_rid}.md").write_text("x\n")
+            (rec_dir / f"{js_rid}.json").write_text("{}\n")
+            (exp / report.SNAPSHOT_DIR / f"{spice_rid}.spice").write_text("*\n")
+            self.assertTrue(report._id_taken(exp, md_rid))
+            self.assertTrue(report._id_taken(exp, js_rid))
+            self.assertTrue(report._id_taken(exp, spice_rid))
+            self.assertFalse(report._id_taken(exp, "20260101-000007-testsha"))
+
+
 if __name__ == "__main__":
     unittest.main()

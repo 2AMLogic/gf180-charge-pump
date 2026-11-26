@@ -247,7 +247,8 @@ evidence).
 **`--supersedes <record-id>`** links a corrected record to the one it
 replaces. On a recorded run the value (surrounding whitespace stripped) must
 name a finished record of the same experiment, `sim/<slug>/records/<record-id>.md`
-— a netlist snapshot or `corners/<record-id>/` bundle alone does not count —
+— a netlist snapshot, a `corners/<record-id>/` bundle, or the record's
+`.json` companion alone does not count —
 or the run is refused before anything is created (exit 2, error listing the
 nearest existing ids). Blank means no supersession; `--no-write` and
 `--sabotage` runs skip the check.
@@ -256,13 +257,24 @@ nearest existing ids). Blank means no supersession; `--no-write` and
 
 | Output | Location |
 |---|---|
-| Recorded run's record, netlist snapshot | `sim/<slug>/records/`, `sim/<slug>/netlist-snapshots/` (append-only) |
+| Recorded run's Markdown record, its companion JSON record, netlist snapshot | `sim/<slug>/records/<record-id>.md`, `sim/<slug>/records/<record-id>.json`, `sim/<slug>/netlist-snapshots/` (append-only) |
 | Recorded run's per-point logs and retained decks | `sim/<slug>/corners/<record-id>/` (the evidence bundle; `INCOMPLETE` until the record is written) |
 | Frozen inputs of a recorded run (exact `tb.json` and netlist fragment bytes) | `sim/<slug>/corners/<record-id>/frozen/` (read-only where the platform allows) |
 | Frozen inputs of a `--no-write` / `--sabotage` run and of `selftest` | `frozen/` inside that invocation's scratch workspace (nothing permanent) |
 | Executed decks and simulator scratch (`run`) | `<parent>/run-<UTC>-<random>/`, parent = `--workdir` or `sim/<slug>/_build/` |
 | `--no-write` / `--sabotage` decks and logs | `<parent>/nowrite-…/` or `<parent>/sabotage-…/` (nothing under `corners/`) |
 | `selftest` grids | `<parent>/selftest-…/normal/` and `…/sabotaged/`, parent = `--workdir` or `sim/<slug>/_selftest/` |
+
+**The companion JSON record.** A recorded run writes two files per record:
+the rendered Markdown evidence record `records/<record-id>.md`, and
+`records/<record-id>.json` carrying the full, unsummarized record dict —
+including the per-point `scope.output_lines` list that the Markdown record
+summarizes to min/max, and everything a block-specific renderer or a later
+review needs. Private `_`-prefixed rendering keys (e.g. `_evidence_lines`)
+are not serialized. Both files are created exclusively and never
+overwritten; `records/<record-id>.md` remains the finished-record marker
+(`--supersedes` resolves it), and a new reservation refuses an id whose
+`.md`, `.json`, or netlist snapshot already exists.
 
 Every `run` / `selftest` invocation creates its **own** scratch workspace
 under the parent (atomically, with `tempfile.mkdtemp`) before it reserves a

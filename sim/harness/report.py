@@ -2,7 +2,8 @@
 
 GENERIC CORE: record-id minting, grid summaries, per-axis sensitivity (the
 guard against a corner sweep that silently pins one axis to typical),
-spec-check evaluation, and an append-only Markdown writer. None of this
+spec-check evaluation, and an append-only record writer (a Markdown record
+plus its companion JSON). None of this
 reads a block-specific field by name -- it works over ``tb.measure`` /
 ``tb.checks`` (both generic, see testbench.py) and
 ``evidence.BaseExtensions.render_lines()`` (block-extensible, see
@@ -32,6 +33,7 @@ from __future__ import annotations
 import datetime as _dt
 import getpass
 import hashlib
+import json
 import math
 import platform
 import re
@@ -134,11 +136,12 @@ def record_exists(experiment_dir: Path, record_id: str) -> bool:
     """Does ``record_id`` name a finished Markdown record in this experiment?
 
     For validating a reference to a prior record (``supersedes``), not for
-    reservation: unlike :func:`_id_taken`, a netlist snapshot or an evidence
-    bundle alone does not count -- only ``records/<record-id>.md`` as a
-    regular file, which :func:`write_record` creates exclusively with its
-    full text. A value not matching :data:`RECORD_ID_RE` is rejected before
-    any path is built from it. Record contents are not parsed.
+    reservation: unlike :func:`_id_taken`, a netlist snapshot, an evidence
+    bundle, or a companion JSON record alone does not count -- only
+    ``records/<record-id>.md`` as a regular file, which :func:`write_record`
+    creates exclusively with its full text. A value not matching
+    :data:`RECORD_ID_RE` is rejected before any path is built from it. Record
+    contents are not parsed.
     """
     if not RECORD_ID_RE.fullmatch(record_id):  # fullmatch: no trailing "\n"
         return False
@@ -146,9 +149,17 @@ def record_exists(experiment_dir: Path, record_id: str) -> bool:
 
 
 def _id_taken(experiment_dir: Path, record_id: str) -> bool:
-    return (experiment_dir / RECORDS_DIR / f"{record_id}.md").exists() or (
-        experiment_dir / SNAPSHOT_DIR / f"{record_id}.spice"
-    ).exists()
+    """Is this record id unusable for a fresh reservation?
+
+    A finished record (``.md``), a reserved netlist snapshot (``.spice``),
+    or an interrupted write's orphan JSON companion -- any of them means a
+    new run must mint the next id instead of reusing this one.
+    """
+    return (
+        (experiment_dir / RECORDS_DIR / f"{record_id}.md").exists()
+        or (experiment_dir / RECORDS_DIR / f"{record_id}.json").exists()
+        or (experiment_dir / SNAPSHOT_DIR / f"{record_id}.spice").exists()
+    )
 
 
 def reserve_record_id(
@@ -1032,15 +1043,39 @@ def render_markdown(record: dict) -> str:
 
 
 def write_record(record: dict, experiment_dir: Path) -> Path:
-    """Append-only write of the Markdown record. Never overwrites."""
+    """Append-only write of a record as two files. Never overwrites.
+
+    Writes ``records/<record-id>.json`` -- the full record dict, minus
+    private ``_``-prefixed rendering keys (e.g. ``_evidence_lines``), so the
+    Markdown record's pointer to the unsummarized ``scope["output_lines"]``
+    list "in the JSON record" is backed by a file -- and then
+    ``records/<record-id>.md``, returning the ``.md`` path. The ``.md`` file
+    stays the finished-record marker (:func:`record_exists` and
+    ``--supersedes`` resolve it), so the write order means an interrupted
+    write can leave an orphan ``.json`` (which :func:`_id_taken` refuses to
+    re-mint) but never a "finished" record without its JSON.
+    """
     records_dir = experiment_dir / RECORDS_DIR
     records_dir.mkdir(parents=True, exist_ok=True)
     path = records_dir / f"{record['record_id']}.md"
-    if path.exists():
-        raise RecordExists(f"{path} already exists; append-only evidence is never rewritten")
-    text = render_markdown(record)
+    json_path = records_dir / f"{record['record_id']}.json"
+    clash = path if path.exists() else (json_path if json_path.exists() else None)
+    if clash is not None:
+        raise RecordExists(
+            f"{clash} already exists; append-only evidence is never rewritten"
+        )
+    public = {k: v for k, v in record.items() if not k.startswith("_")}
     # Exclusive create is the real protection: the exists() check above is
     # only a friendly early diagnostic and cannot stop a concurrent writer.
+    try:
+        with open(json_path, "x", encoding="utf-8") as fh:
+            json.dump(public, fh, indent=2)
+            fh.write("\n")
+    except FileExistsError as exc:
+        raise RecordExists(
+            f"{json_path} already exists; append-only evidence is never rewritten"
+        ) from exc
+    text = render_markdown(record)
     try:
         with open(path, "x", encoding="utf-8") as fh:
             fh.write(text)
