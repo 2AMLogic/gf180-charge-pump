@@ -1,0 +1,102 @@
+{
+  "ngspice": 46,
+  "model_sha256": {
+    "design.ngspice": "7e222f050318388f37543a64fbd0be55cc15e4b93f57501a09f7c159c4c9e561",
+    "sm141064.ngspice": "f6f4a96e18fc5ad11270ad3451aaecc7ac37fc81eb61e15b0d7d94c7bc594a24",
+    "sm141064.spice": "f6f4a96e18fc5ad11270ad3451aaecc7ac37fc81eb61e15b0d7d94c7bc594a24",
+    "sm141064_mim.spice": "9b85cd009968d9aeb6b61046b24a63f39d6a463c4e4aee3949c8fd183c06666f"
+  },
+  "step_ns": 0.2,
+  "edge_ns": 1,
+  "load_ma": 10,
+  "pulse_us": [
+    1,
+    10,
+    100
+  ],
+  "core_sha256": "3509f086865b6faf7dfd0ef95e112c9c3315ace89a5bc688ede5bee40ebcf126",
+  "regulator_sha256": "de236a629091538d9f63d1a9d5c5ba707879c2512b10c1745bac72bb4f427a46",
+  "records": [
+    {
+      "point": "typical/typical/typical/typical/25C/3.3V",
+      "measurements": {
+        "pulse1_vmin": 4.8672,
+        "pulse1_vmax": 5.01574,
+        "pulse1_pin_w": 0.142948,
+        "pulse1_pout_w": 0.0499929,
+        "pulse1_release_v": 5.14329,
+        "pulse10_vmin": 4.86783,
+        "pulse10_vmax": 5.01574,
+        "pulse10_pin_w": 0.142671,
+        "pulse10_pout_w": 0.050045,
+        "pulse10_release_v": 5.14444,
+        "pulse100_vmin": 4.86697,
+        "pulse100_vmax": 5.01574,
+        "pulse100_pin_w": 0.142642,
+        "pulse100_pout_w": 0.0500502,
+        "pulse100_release_v": 5.14352,
+        "before_first_pulse_v": 5.01614,
+        "last_idle_pin_w": 0.142375,
+        "last_idle_shunt_w": 0.0790016,
+        "end_time": 0.000119,
+        "pulse1_efficiency_pct": 34.972787307272576,
+        "pulse10_efficiency_pct": 35.07720559889536,
+        "pulse100_efficiency_pct": 35.08798250164748
+      }
+    },
+    {
+      "point": "ss/ss/ss/ss/125C/2.97V",
+      "measurements": {
+        "pulse1_vmin": 4.6917,
+        "pulse1_vmax": 5.11905,
+        "pulse1_pin_w": 0.0795043,
+        "pulse1_pout_w": 0.0472989,
+        "pulse1_release_v": 5.39415,
+        "pulse10_vmin": 4.6917,
+        "pulse10_vmax": 5.12874,
+        "pulse10_pin_w": 0.0802684,
+        "pulse10_pout_w": 0.0471288,
+        "pulse10_release_v": 5.39402,
+        "pulse100_vmin": 4.6917,
+        "pulse100_vmax": 5.13361,
+        "pulse100_pin_w": 0.0803397,
+        "pulse100_pout_w": 0.0471118,
+        "pulse100_release_v": 5.39416,
+        "before_first_pulse_v": 5.14615,
+        "last_idle_pin_w": 0.0609652,
+        "last_idle_shunt_w": 0.0336218,
+        "end_time": 0.000119,
+        "pulse1_efficiency_pct": 59.49225387809213,
+        "pulse10_efficiency_pct": 58.71401448141485,
+        "pulse100_efficiency_pct": 58.64074672920114
+      }
+    },
+    {
+      "point": "ff/ss/ff/ff/-40C/3.63V",
+      "measurements": {
+        "pulse1_vmin": 4.76703,
+        "pulse1_vmax": 4.87583,
+        "pulse1_pin_w": 0.250506,
+        "pulse1_pout_w": 0.0486297,
+        "pulse1_release_v": 4.9581,
+        "pulse10_vmin": 4.76678,
+        "pulse10_vmax": 4.87586,
+        "pulse10_pin_w": 0.250413,
+        "pulse10_pout_w": 0.0486552,
+        "pulse10_release_v": 4.95769,
+        "pulse100_vmin": 4.76724,
+        "pulse100_vmax": 4.87587,
+        "pulse100_pin_w": 0.250402,
+        "pulse100_pout_w": 0.0486578,
+        "pulse100_release_v": 4.95795,
+        "before_first_pulse_v": 4.86782,
+        "last_idle_pin_w": 0.250273,
+        "last_idle_shunt_w": 0.131539,
+        "end_time": 0.000119,
+        "pulse1_efficiency_pct": 19.412588920025865,
+        "pulse10_efficiency_pct": 19.429981670280696,
+        "pulse100_efficiency_pct": 19.431873547335883
+      }
+    }
+  ]
+}
