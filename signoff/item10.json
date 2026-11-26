@@ -4,6 +4,7 @@
   "t1_item": 10,
   "description": "Block README, reproduction instructions, licence, CI and the simulation gate used by CI.",
   "hygiene": [
+    "README.md",
     "LICENSE",
     "signoff/README.md",
     "signoff/check.sh",
