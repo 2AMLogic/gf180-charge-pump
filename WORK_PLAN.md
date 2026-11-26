@@ -7,7 +7,7 @@ The body below is a snapshot of GitHub label state as of the last merged docs-ma
 <!-- Maintained automatically by the Guide triage agent. Manual edits are fine but may be overwritten. -->
 
 <!-- guide:plan-body:start -->
-_Generated: 2026-11-25T09:38:55Z (snapshot; compare against live labels)_
+_Generated: 2026-11-25T18:15:00Z (snapshot; compare against live labels)_
 ## Operator Attention: Merge-Risk-Hold Pileup
 
 Judge-approved PRs under a hold (`loom:blocked` or `loom:operator`) — only a human merge decision is missing.
@@ -43,7 +43,6 @@ _None._
 Issues currently being built (`loom:building`).
 
 - **#1**: Ratify the target spec
-- **#39**: sim/README.md does not index the new sim/records/ evidence directory
 
 ## PRs Awaiting Review
 
@@ -62,7 +61,6 @@ _None._
 Issues carrying `loom:curated`.
 
 - **#1**: Ratify the target spec *(curated)*
-- **#39**: sim/README.md does not index the new sim/records/ evidence directory *(curated)*
 
 ## Proposed (Architect / Hermit)
 
@@ -80,11 +78,11 @@ _None._
 | Very important | 0 |
 | Important | 1 |
 | Ready (`loom:issue`, net of holds/building/open-linked-PRs) | 0 |
-| In Progress (`loom:building`) | 2 |
+| In Progress (`loom:building`) | 1 |
 | Held, no other bucket | 1 |
 | PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 0 |
-| Curated | 2 |
+| Curated | 1 |
 | Architect / Hermit proposals | 1 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->
