@@ -93,6 +93,22 @@ def measures(long_run, driver):
     return values
 
 
+def transient_setup(case, models, long_run, gear, shunt_ohms=1):
+    mos, mim, temp, vin, side, clamp, step = case
+    driver = DRIVER_V[vin]
+    return [
+        "Enabled ring and pump capacitor feasibility",
+        f'.include "{models}/design.ngspice"',
+        f'.lib "{models}/sm141064.ngspice" {mos}',
+        f'.lib "{models}/sm141064.ngspice" {mim}',
+        f".temp {temp}",
+        f".param input_v={vin} driver_v={driver} wire_c=5f delay_side={side}u clamp_on={int(clamp) / shunt_ohms:g}",
+        f'.include "{HERE / "candidate.spice"}"',
+        *([".options method=gear maxord=2"] if gear else []),
+        f".tran {step}n {'24u' if long_run else '650n'} 0 {step}n",
+    ]
+
+
 def simulate(case, models, ngspice, long_run, gear=False):
     mos, mim, temp, vin, side, clamp, step = case
     driver = DRIVER_V[vin]
@@ -106,15 +122,7 @@ def simulate(case, models, ngspice, long_run, gear=False):
             for op in ("min", "max"):
                 values[f"steady_{name}_{op}"] = f"{op} {signal} from=20u to=22u"
     lines = [
-        "Enabled ring and pump capacitor feasibility",
-        f'.include "{models}/design.ngspice"',
-        f'.lib "{models}/sm141064.ngspice" {mos}',
-        f'.lib "{models}/sm141064.ngspice" {mim}',
-        f".temp {temp}",
-        f".param input_v={vin} driver_v={driver} wire_c=5f delay_side={side}u clamp_on={int(clamp)}",
-        f'.include "{HERE / "candidate.spice"}"',
-        *([".options method=gear maxord=2"] if gear else []),
-        f".tran {step}n {'24u' if long_run else '650n'} 0 {step}n",
+        *transient_setup(case, models, long_run, gear),
         *(f".meas tran {name} {expr}" for name, expr in values.items()),
         ".end",
     ]

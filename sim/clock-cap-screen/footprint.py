@@ -41,7 +41,9 @@ def main():
         )
     )
     after = top.bbox()
-    layout.write(str(args.output))
+    options = db.SaveLayoutOptions()
+    options.gds2_write_timestamps = False
+    layout.write(str(args.output), options)
     for desc, box in (("221 pump capacitors", before), ("with three timing capacitors", after)):
         print(
             f"{desc}: {box.width() * layout.dbu:g} x {box.height() * layout.dbu:g} um, "

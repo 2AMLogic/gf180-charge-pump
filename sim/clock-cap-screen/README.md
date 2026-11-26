@@ -24,6 +24,26 @@ All 135 traces meet the proposed S2/S3 loaded band and S5 ripple limit in the me
 
 The clock period comes from twenty rising-edge intervals at half the driver rail on each final phase output. At the slow/hot, high-input, high-capacitance point, raising the three timing capacitors from 8 × 8 µm to 9 × 9 µm reduces the loaded clock to **99.07 MHz**. The oscillator therefore needs a physical timing budget or trim. Variation of its prescribed rail, extracted delay wiring and the complete regulator are outside this screen. [Startup clock records](records/clock.json) · [Loaded transients](records/load.json) · [Controls](records/controls.json)
 
+## MOS terminal stress and output limiter
+
+For each of the 24 MOS instances, the bench records the signed extrema of all six terminal differences on simultaneous samples from startup through 24 µs. The four power switches, the eight oscillator/enable transistors and the twelve 3.3 V driver transistors have an explicit drain, gate, source and body mapping in the record. The number of parallel fingers or copies in a device leaves its terminal voltages unchanged. [149 transient records and device map](records/terminal-stress.json) · [Producer](terminal_stress.py)
+
+| Device group · unpadded nameplate | VDS (V) | VGS (V) | VDB (V) | VGB (V) | VGD (V) | VSB (V) |
+|---|---:|---:|---:|---:|---:|---:|
+| Power PMOS · 6 V | −2.770…0.972 | −2.770…0.972 | −2.770…0.972 | −2.770…0.972 | −2.922…2.922 | 0 |
+| Power NMOS · 6 V | −4.618…2.780 | −4.618…2.780 | −0.991…5.945 | −0.991…5.945 | −2.922…2.922 | 2.970…3.630 |
+| Oscillator and NAND · 6 V | −2.987…2.971 | −2.987…2.997 | −2.987…2.971 | −2.987…2.997 | −2.971…2.997 | −0.012…2.300 |
+| Clock drivers · 3.3 V | −3.063…3.082 | −3.006…3.006 | −3.063…3.082 | −3.006…3.006 | −2.995…3.002 | 0 |
+
+The table covers all 135 shunted grid traces. The limiting NMOS body-referenced excursion reaches 5.945 V, and the driver maximum magnitude reaches 3.082 V. All six terminal differences stay inside the unpadded voltage-class magnitudes on this grid. With the shunt open the NMOS reaches 6.370 V in the cold trapezoidal control and 6.330 V in the cold Gear control. Reverse junction bias, forward injection, time above a limit and foundry operating rules require separate reliability review. The comparisons here use the unpadded device ratings.
+
+At 3.63 V input, FF MOS and fast MIM, changing only the ideal shunt on-resistance gives the following release peaks with Gear-2 and a 0.05 ns maximum step. Both 4 Ω runs exceed the proposed 5.5 V ceiling.
+
+| Temperature | 1 Ω | 2 Ω | 4 Ω |
+|---|---:|---:|---:|
+| −40 °C | 5.47392 V | 5.49311 V | **5.52559 V** |
+| 125 °C | 5.46646 V | 5.47970 V | **5.50138 V** |
+
 ## MIM terminals and published ratings
 
 | Observed voltage over the complete 24 µs run with shunt | Minimum (V) | Maximum (V) |
@@ -67,15 +87,13 @@ python3 sim/clock-cap-screen/screen.py clock
 python3 sim/clock-cap-screen/screen.py load
 python3 sim/clock-cap-screen/screen.py controls
 python3 sim/clock-cap-screen/screen.py gear
+python3 sim/clock-cap-screen/terminal_stress.py --jobs 4
 ```
 
-The default is one simulator process. On a dedicated machine, `--jobs N` runs independent corners concurrently. To reproduce the measured coupon and its native MIM DRC, use a new output pathname and the pinned installation's PCell library.
+The default is one simulator process. On a dedicated machine, `--jobs N` runs independent electrical corners concurrently. The coupon generator requires a new output path. Geometry verification runs the released KLT native engine on the [committed GDS](records/cap-coupon.gds), using the pinned GF180D deck, an exact rule inventory and a KLayout binary on PATH. The two reports retain KLT's deck-tree and layout hashes, coverage and violations. Their deck path is relative to the PDK installation. [MIM-B report](records/drc-mim_b.json) · [Full native report](records/drc-all.json)
 
 ```sh
 uv run --no-project --with 'klayout==0.30.13' python sim/clock-cap-screen/footprint.py /tmp/pump-cap-coupon.gds
-klayout -b -r "$GF180_PDK_PATH/libs.tech/klayout/tech/drc/gf180mcu.drc" \
-  -rd input=/tmp/pump-cap-coupon.gds -rd report=/tmp/pump-cap-mim.lyrdb \
-  -rd variant=D -rd topcell=CAPACITOR_COUPON -rd decks=mim_b
+cmp /tmp/pump-cap-coupon.gds sim/clock-cap-screen/records/cap-coupon.gds
+python3 sim/clock-cap-screen/coupon_drc.py --pdk-root "$(dirname "$GF180_PDK_PATH")"
 ```
-
-Omit `-rd decks=mim_b` for the standalone full-deck measurement.
