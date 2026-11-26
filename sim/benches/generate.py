@@ -91,7 +91,8 @@ def v(node: str) -> str:
 
 
 def window(t0: str, t1: str) -> str:
-    return f"((time>{t0})&(time<{t1}))"
+    # Nutmeg versions before 47 parse angle brackets in the control shell as redirection.
+    return f"((time gt {t0}) and (time lt {t1}))"
 
 
 def w_mean(vec: str, t0: str, t1: str) -> str:
@@ -206,7 +207,7 @@ def startup():
         f"* enable = clock start at {us(TDEL_START_S)}; supply present from t=0; resistive full load.\n"
         + f"rload vout 0 {VOUT_MIN / (ILOAD_MA * 1e-3):g}\n"
     )
-    above = f"(v(vout)>{VOUT_MIN})"
+    above = f"(v(vout) gt {VOUT_MIN})"
     measure = {
         f"startup_to_{round(VOUT_MIN*1000)}mv_at_{ILOAD_MA}ma_s": f"minimum(time+(1-{above})*1)-{us(TDEL_START_S)}",
     }

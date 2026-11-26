@@ -27,7 +27,7 @@ def main():
         sys.exit(f"Bench inventory differs from shipped tb.json files: {inventoried ^ expected}")
     for path in files:
         slug = path.parent.parent.name
-        bench, point = run(slug)
+        bench, point = run(slug, num_threads=1)
         if point.status != "ok" or set(point.measurements) != set(bench.measure):
             sys.exit(f"{slug}: {point.status}, {point.message}, missing {point.missing}")
         if not all(math.isfinite(v) for v in point.measurements.values()):

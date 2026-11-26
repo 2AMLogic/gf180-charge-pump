@@ -18,12 +18,12 @@
     "tran 1n 210u 0 1n"
   ],
   "measure": {
-    "vout_at_10ma_resistive_mean_v": "mean(((time>200u)&(time<210u))*v(vout))/mean(((time>200u)&(time<210u)))",
-    "vout_at_10ma_resistive_min_v": "-maximum(-((time>200u)&(time<210u))*v(vout)-(1-((time>200u)&(time<210u)))*1e3)",
-    "vout_at_10ma_resistive_max_v": "maximum(((time>200u)&(time<210u))*v(vout)-(1-((time>200u)&(time<210u)))*1e3)",
-    "ripple_at_10ma_resistive_pp_v": "maximum(((time>200u)&(time<210u))*v(vout)-(1-((time>200u)&(time<210u)))*1e3)-(-maximum(-((time>200u)&(time<210u))*v(vout)-(1-((time>200u)&(time<210u)))*1e3))",
-    "iload_10ma_resistive_mean_a": "mean(((time>200u)&(time<210u))*v(vout))/mean(((time>200u)&(time<210u)))/450",
-    "iload_10ma_resistive_min_a": "-maximum(-((time>200u)&(time<210u))*v(vout)-(1-((time>200u)&(time<210u)))*1e3)/450"
+    "vout_at_10ma_resistive_mean_v": "mean(((time gt 200u) and (time lt 210u))*v(vout))/mean(((time gt 200u) and (time lt 210u)))",
+    "vout_at_10ma_resistive_min_v": "-maximum(-((time gt 200u) and (time lt 210u))*v(vout)-(1-((time gt 200u) and (time lt 210u)))*1e3)",
+    "vout_at_10ma_resistive_max_v": "maximum(((time gt 200u) and (time lt 210u))*v(vout)-(1-((time gt 200u) and (time lt 210u)))*1e3)",
+    "ripple_at_10ma_resistive_pp_v": "maximum(((time gt 200u) and (time lt 210u))*v(vout)-(1-((time gt 200u) and (time lt 210u)))*1e3)-(-maximum(-((time gt 200u) and (time lt 210u))*v(vout)-(1-((time gt 200u) and (time lt 210u)))*1e3))",
+    "iload_10ma_resistive_mean_a": "mean(((time gt 200u) and (time lt 210u))*v(vout))/mean(((time gt 200u) and (time lt 210u)))/450",
+    "iload_10ma_resistive_min_a": "-maximum(-((time gt 200u) and (time lt 210u))*v(vout)-(1-((time gt 200u) and (time lt 210u)))*1e3)/450"
   },
   "checks": {
     "vout_at_10ma_resistive_min_v": {

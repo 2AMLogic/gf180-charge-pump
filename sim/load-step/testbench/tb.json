@@ -18,10 +18,10 @@
     "tran 1n 250u 0 1n"
   ],
   "measure": {
-    "vout_step_to_10ma_post_mean_v": "mean(((time>230u)&(time<250u))*v(vout))/mean(((time>230u)&(time<250u)))",
-    "vout_step_to_10ma_post_min_v": "-maximum(-((time>210u)&(time<250u))*v(vout)-(1-((time>210u)&(time<250u)))*1e3)",
-    "vout_step_to_10ma_post_max_v": "maximum(((time>210u)&(time<250u))*v(vout)-(1-((time>210u)&(time<250u)))*1e3)",
-    "vds_peak_pmos_during_step_v": "maximum(((time>200u)&(time<250u))*abs(v(xdut.a)-v(vout))-(1-((time>200u)&(time<250u)))*1e3)",
+    "vout_step_to_10ma_post_mean_v": "mean(((time gt 230u) and (time lt 250u))*v(vout))/mean(((time gt 230u) and (time lt 250u)))",
+    "vout_step_to_10ma_post_min_v": "-maximum(-((time gt 210u) and (time lt 250u))*v(vout)-(1-((time gt 210u) and (time lt 250u)))*1e3)",
+    "vout_step_to_10ma_post_max_v": "maximum(((time gt 210u) and (time lt 250u))*v(vout)-(1-((time gt 210u) and (time lt 250u)))*1e3)",
+    "vds_peak_pmos_during_step_v": "maximum(((time gt 200u) and (time lt 250u))*abs(v(xdut.a)-v(vout))-(1-((time gt 200u) and (time lt 250u)))*1e3)",
     "stress_xmn1_vds_v": "maximum(abs(v(xdut.a)-v(vin)))",
     "stress_xmn1_vgs_v": "maximum(abs(v(xdut.b)-v(vin)))",
     "stress_xmn1_vdb_v": "maximum(abs(v(xdut.a)-0))",
