@@ -104,6 +104,56 @@ class ActiveRegulation(unittest.TestCase):
             self.assertTrue(all(instance in mos for _, instance in group.values()))
         self.assertEqual(row["measurements"]["end_time"], 24e-6)
 
+    def test_transient_records_match_circuit_and_cover_points(self):
+        producer = runpy.run_path(str(HERE / "screen.py"))
+        pinned = {
+            "controls": (
+                ("point", "step_ns", "supply_ramp"),
+                {
+                    ("ff/ff/ff/ff/-40C/3.63V", 0.1, False),
+                    ("ss/ff/ss/ss/125C/2.97V", 0.1, False),
+                    ("typical/typical/typical/typical/25C/3.3V", 0.1, True),
+                    ("ss/ff/ff/ff/125C/2.97V", 0.2, False),
+                    ("ff/ss/ss/ss/-40C/3.63V", 0.2, False),
+                },
+            ),
+            "isolation": (
+                ("point", "variant"),
+                {
+                    ("ff/ff/ff/ff/-40C/3.63V", "open_shunt"),
+                    ("ss/ss/ss/ss/125C/2.97V", "prescribed_driver"),
+                    ("ff/ff/ff/ff/-40C/3.63V", "one_ns_load"),
+                    ("ss/ss/ss/ss/125C/2.97V", "one_ns_load"),
+                },
+            ),
+        }
+        for suite in ("pvt", "controls", "isolation"):
+            with self.subTest(suite=suite):
+                data = record(suite)
+                self.assertEqual(data["core_sha256"], digest(producer["ORIGINAL"]))
+                self.assertEqual(
+                    data["regulator_sha256"], digest(producer["REGULATORS"])
+                )
+                self.assertEqual(data["model_sha256"], producer["MODEL_SHA"])
+                for row in data["records"]:
+                    with self.subTest(suite=suite, point=row["point"]):
+                        self.assertEqual(row["measurements"]["end_time"], 24e-6)
+                if suite == "pvt":
+                    self.assertEqual(
+                        [row["point"] for row in data["records"]],
+                        [point.key() for point in producer["points"]()],
+                    )
+                else:
+                    fields, expected = pinned[suite]
+                    self.assertEqual(len(data["records"]), len(expected))
+                    self.assertEqual(
+                        {
+                            tuple(row[field] for field in fields)
+                            for row in data["records"]
+                        },
+                        expected,
+                    )
+
     def test_port_probes_distinguish_fast_step_from_settled_gain(self):
         evidence = record("impedance")
         self.assertEqual(
