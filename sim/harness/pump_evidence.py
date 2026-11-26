@@ -101,7 +101,7 @@ def evaluate(checks: dict, measure_names, results) -> dict:
     for r in results:
         if r.status != "ok":
             continue
-        point = {"process": r.point.corner.name, "temp_c": r.point.temp_c, "vdd": r.point.vdd}
+        point = r.point.as_dict()
         for k, v in r.measurements.items():
             if k not in loaded:
                 continue

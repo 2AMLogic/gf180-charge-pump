@@ -28,6 +28,12 @@ Placeholders (flagged in `generate.py`; change a value when #1 ratifies): 6.0 V
 device rating (**unconfirmed**; the PDK names these "6.0V" devices and carries no numeric rating, so the name-plate is used unpadded), ripple limit,
 start-up time limit.
 
+## Records
+
+`records/` is the append-only home for suite-level measurement records (for
+example `records/ngspice-sensitivity.md`), as distinct from
+`cap-model/records/`, which is that bench's own evidence.
+
 ## Running
 
 ```

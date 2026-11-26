@@ -27,14 +27,19 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      # ngspice floats on the runner's apt package (no exact pin: the package
+      # vanishes on point releases). Recorded evidence was produced with
+      # ngspice-47; the CI run on #26 used 45.2. The version actually used is
+      # printed below so every CI record shows it next to the PDK rev.
       - name: Install ngspice
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends ngspice
           ngspice --version | head -3
+          echo "open_pdks rev: $OPEN_PDKS_REV"
       - name: Install gf180mcu PDK
         run: |
-          python3 -m pip install ciel
+          python3 -m pip install ciel==3.3.0
           ciel enable --pdk-family gf180mcu "$OPEN_PDKS_REV"
           ls "$PDK_ROOT"
       - name: Run sim tests

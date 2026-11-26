@@ -7,7 +7,7 @@ The body below is a snapshot of GitHub label state as of the last merged docs-ma
 <!-- Maintained automatically by the Guide triage agent. Manual edits are fine but may be overwritten. -->
 
 <!-- guide:plan-body:start -->
-_Generated: 2026-11-25T03:15:00Z (snapshot; compare against live labels)_
+_Generated: 2026-11-25T18:15:00Z (snapshot; compare against live labels)_
 ## Operator Attention: Merge-Risk-Hold Pileup
 
 Judge-approved PRs under a hold (`loom:blocked` or `loom:operator`) — only a human merge decision is missing.
@@ -25,7 +25,6 @@ _None._
 `loom:important`; taken before unlabelled work.
 
 - **#1**: Ratify the target spec
-- **#7**: Flying-cap value is held at typical: the PVT grid does not sweep the PDK's MIM capacitor corners
 
 ## Ready
 
@@ -44,13 +43,12 @@ _None._
 Issues currently being built (`loom:building`).
 
 - **#1**: Ratify the target spec
-- **#7**: Flying-cap value is held at typical: the PVT grid does not sweep the PDK's MIM capacitor corners
 
 ## PRs Awaiting Review
 
 PRs waiting on Judge (`loom:review-requested`).
 
-- **#13**: feat: add mimcap corner family and 135-point PVT grid with report tagging
+_None._
 
 ## Approved (Awaiting Merge)
 
@@ -63,11 +61,10 @@ _None._
 Issues carrying `loom:curated`.
 
 - **#1**: Ratify the target spec *(curated)*
-- **#7**: Flying-cap value is held at typical: the PVT grid does not sweep the PDK's MIM capacitor corners *(curated)*
 
 ## Proposed (Architect / Hermit)
 
-- **#12**: pump_evidence.output_lines/stress_margins are never called outside tests: wire into report or drop *(hermit)*
+- **#41**: Toolchain pin drift guard is inert: no pin file exists, no tests (activate or remove) *(hermit)* *(held)*
 
 ## Epics
 
@@ -79,13 +76,13 @@ _None._
 |------|-------|
 | Operator merge-risk holds | 0 |
 | Very important | 0 |
-| Important | 2 |
+| Important | 1 |
 | Ready (`loom:issue`, net of holds/building/open-linked-PRs) | 0 |
-| In Progress (`loom:building`) | 2 |
+| In Progress (`loom:building`) | 1 |
 | Held, no other bucket | 1 |
-| PRs awaiting review | 1 |
+| PRs awaiting review | 0 |
 | Approved PRs awaiting merge | 0 |
-| Curated | 2 |
+| Curated | 1 |
 | Architect / Hermit proposals | 1 |
 | Active epics | 0 |
 <!-- guide:plan-body:end -->

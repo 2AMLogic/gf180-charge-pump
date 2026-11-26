@@ -193,7 +193,10 @@ class RenderLinesSummary(unittest.TestCase):
         out = pump_evidence.render_lines(self._scope(1))
         self.assertIn("Min `vout_at_10ma_a_v`: c0", "\n".join(out))
         self.assertIn("Max `vout_at_10ma_a_v`: c0", "\n".join(out))
-        self.assertEqual(pump_evidence.render_lines({"output_lines": [], "stress": []}), [])
+        self.assertEqual(
+            pump_evidence.render_lines({"output_lines": [], "stress": []}),
+            [pump_evidence.NO_STRESS_LINE],
+        )
 
 
 class ScopeRuleInRecords(unittest.TestCase):
@@ -212,6 +215,7 @@ class ScopeRuleInRecords(unittest.TestCase):
         (x,) = a["scope"]["output_lines"]
         self.assertIn("10 mA load", x["line"])
         self.assertIn("25 C 3.3 V", x["line"])
+        self.assertIn("mimcap_typical", x["line"])
 
     def test_unloaded_vout_fails_record(self):
         a = self._run(["vout_noload_v"], {}, {"vout_noload_v": 6.0})
@@ -232,6 +236,38 @@ class ScopeRuleInRecords(unittest.TestCase):
         a = self._run(["stress_a_vds_v"], chk, {"stress_a_vds_v": 5.0})
         self.assertEqual(a["failures"], [])
         self.assertAlmostEqual(a["scope"]["stress"][0]["worst_margin_v"], 1.0)
+
+
+class ScopeHeadingAlwaysPresent(unittest.TestCase):
+    """``## Scope rule`` is emitted for every record, incl. one with no ``scope`` key (#28)."""
+
+    HEADING = "## Scope rule (output under load, device stress)"
+
+    def _md(self, scope):
+        from tests.test_mimcap_axis import MimcapMarkdownTag
+        rec = dict(MimcapMarkdownTag._record(None))
+        rec.pop("scope", None)
+        if scope is not None:
+            rec["scope"] = scope
+        return report.render_markdown(rec)
+
+    def test_no_scope_key(self):
+        md = self._md(None)
+        self.assertIn(self.HEADING, md)
+        self.assertIn(pump_evidence.NO_STRESS_LINE, md)
+
+    def test_load_only_scope(self):
+        md = self._md({"output_lines": [{"at": "c0", "name": "vout_at_10ma_v", "value": 4.8,
+                                         "line": "vout_at_10ma_v: 4.8 V at 10 mA load, c0"}],
+                       "stress": []})
+        self.assertIn(self.HEADING, md)
+        self.assertIn("Min `vout_at_10ma_v`", md)
+
+    def test_stress_only_scope(self):
+        md = self._md({"output_lines": [], "stress": [
+            {"at": "tt", "worst": "stress_a_vds_v", "worst_margin_v": 0.5, "violations": []}]})
+        self.assertIn(self.HEADING, md)
+        self.assertIn("Worst device-stress margin: 0.5 V", md)
 
 
 if __name__ == "__main__":
