@@ -1,0 +1,534 @@
+{
+  "ngspice": 46,
+  "model_sha256": {
+    "design.ngspice": "7e222f050318388f37543a64fbd0be55cc15e4b93f57501a09f7c159c4c9e561",
+    "sm141064.ngspice": "f6f4a96e18fc5ad11270ad3451aaecc7ac37fc81eb61e15b0d7d94c7bc594a24",
+    "sm141064.spice": "f6f4a96e18fc5ad11270ad3451aaecc7ac37fc81eb61e15b0d7d94c7bc594a24",
+    "sm141064_mim.spice": "9b85cd009968d9aeb6b61046b24a63f39d6a463c4e4aee3949c8fd183c06666f"
+  },
+  "core_sha256": "3509f086865b6faf7dfd0ef95e112c9c3315ace89a5bc688ede5bee40ebcf126",
+  "regulator_sha256": "de236a629091538d9f63d1a9d5c5ba707879c2512b10c1745bac72bb4f427a46",
+  "order": "MOS/MIM/resistor/bipolar/temperature/input",
+  "records": [
+    {
+      "point": "ff/ff/ff/ff/-40C/3.63V",
+      "step_ns": 0.2,
+      "supply_ramp": false,
+      "variant": "open_shunt",
+      "measurements": {
+        "end_time": 2.4e-05,
+        "before_out_min": 6.24669,
+        "before_out_max": 6.2762,
+        "before_vr_min": 2.57447,
+        "before_vr_max": 2.95351,
+        "before_ref_min": 1.18458,
+        "before_ref_max": 1.18625,
+        "ramp_out_min": 5.8606,
+        "ramp_out_max": 6.27646,
+        "ramp_vr_min": 2.57523,
+        "ramp_vr_max": 2.95327,
+        "ramp_ref_min": 1.18459,
+        "ramp_ref_max": 1.18625,
+        "load_out_min": 5.85976,
+        "load_out_max": 5.89003,
+        "load_vr_min": 2.61057,
+        "load_vr_max": 2.94457,
+        "load_ref_min": 1.18468,
+        "load_ref_max": 1.18621,
+        "settled_out_min": 5.85983,
+        "settled_out_max": 5.88941,
+        "settled_vr_min": 2.6109,
+        "settled_vr_max": 2.94431,
+        "settled_ref_min": 1.18468,
+        "settled_ref_max": 1.18621,
+        "release_out_min": 5.86066,
+        "release_out_max": 6.27622,
+        "release_vr_min": 2.57432,
+        "release_vr_max": 2.95717,
+        "release_ref_min": 1.18458,
+        "release_ref_max": 1.18636,
+        "all_out_max": 6.2764558459,
+        "all_ref_max": 1.1863590203,
+        "all_vr_max": 2.9767541046,
+        "loaded_shunt_a": 5.87506e-12,
+        "unloaded_shunt_a": 6.25963e-12,
+        "loaded_input_a": 0.0398563,
+        "unloaded_input_a": 0.0217946,
+        "loaded_driver_a": 0.028942,
+        "unloaded_driver_a": 0.0208869,
+        "loaded_shunt_w": 3.45237e-11,
+        "unloaded_shunt_w": 3.91934e-11,
+        "twenty_clk": 5.81428e-08,
+        "twenty_clkb": 5.81431e-08
+      },
+      "mos_v": {
+        "03v3": {
+          "gs": [
+            2.9873469807,
+            "xcompout.xn"
+          ],
+          "gd": [
+            2.959494311,
+            "xcomp2.xn"
+          ],
+          "gb": [
+            2.9873469807,
+            "xcompout.xn"
+          ],
+          "ds": [
+            2.9873469807,
+            "xcomp2.xn"
+          ],
+          "db": [
+            2.9881933199,
+            "xdrv.xerr.xn2.xt"
+          ],
+          "db_forward": [
+            0.16522647653,
+            "xcompout.xp"
+          ],
+          "sb": [
+            1.292273188,
+            "xref.xctl.xp1.xt"
+          ],
+          "sb_forward": [
+            0.0,
+            "xdrv.xerr.xp1.xt"
+          ]
+        },
+        "06v0": {
+          "gs": [
+            4.605508276,
+            "xn1.xm"
+          ],
+          "gd": [
+            3.6682553846,
+            "xpand2.xm"
+          ],
+          "gb": [
+            6.3825017057,
+            "xn2.xm"
+          ],
+          "ds": [
+            4.605508276,
+            "xn2.xm"
+          ],
+          "db": [
+            6.3825017057,
+            "xn1.xm"
+          ],
+          "db_forward": [
+            0.975508276,
+            "xn2.xm"
+          ],
+          "sb": [
+            3.63,
+            "xn1.xm"
+          ],
+          "sb_forward": [
+            0.01470523581,
+            "xnand1.xm"
+          ]
+        }
+      },
+      "max_mim_v": [
+        6.2764558459,
+        "xco"
+      ],
+      "max_pnp_eb_v": [
+        0.82680605126,
+        "xref.xsmall"
+      ]
+    },
+    {
+      "point": "ss/ss/ss/ss/125C/2.97V",
+      "step_ns": 0.2,
+      "supply_ramp": false,
+      "variant": "prescribed_driver",
+      "measurements": {
+        "end_time": 2.4e-05,
+        "before_out_min": 5.12051,
+        "before_out_max": 5.14646,
+        "before_vr_min": 2.97,
+        "before_vr_max": 2.97,
+        "before_ref_min": 1.23378,
+        "before_ref_max": 1.23391,
+        "ramp_out_min": 4.81915,
+        "ramp_out_max": 5.14648,
+        "ramp_vr_min": 2.97,
+        "ramp_vr_max": 2.97,
+        "ramp_ref_min": 1.23305,
+        "ramp_ref_max": 1.23394,
+        "load_out_min": 4.81138,
+        "load_out_max": 4.84607,
+        "load_vr_min": 2.97,
+        "load_vr_max": 2.97,
+        "load_ref_min": 1.23305,
+        "load_ref_max": 1.23409,
+        "settled_out_min": 4.81138,
+        "settled_out_max": 4.83904,
+        "settled_vr_min": 2.97,
+        "settled_vr_max": 2.97,
+        "settled_ref_min": 1.23319,
+        "settled_ref_max": 1.23409,
+        "release_out_min": 4.81352,
+        "release_out_max": 5.42891,
+        "release_vr_min": 2.97,
+        "release_vr_max": 2.97,
+        "release_ref_min": 1.23327,
+        "release_ref_max": 1.23833,
+        "all_out_max": 5.4289100645,
+        "all_ref_max": 1.255981519,
+        "all_vr_max": 2.97,
+        "loaded_shunt_a": 0.000100028,
+        "unloaded_shunt_a": 0.00727157,
+        "loaded_input_a": 0.0104694,
+        "unloaded_input_a": 0.007684,
+        "loaded_driver_a": 0.0169737,
+        "unloaded_driver_a": 0.0144825,
+        "loaded_shunt_w": 0.00048334,
+        "unloaded_shunt_w": 0.0373746,
+        "twenty_clk": 1.57022e-07,
+        "twenty_clkb": 1.57022e-07
+      },
+      "mos_v": {
+        "03v3": {
+          "gs": [
+            2.9939794556,
+            "xsense.xn"
+          ],
+          "gd": [
+            2.9939076553,
+            "xsense.xn"
+          ],
+          "gb": [
+            2.9939794556,
+            "xsense.xn"
+          ],
+          "ds": [
+            3.0413304133,
+            "xcompout.xn"
+          ],
+          "db": [
+            3.0413304133,
+            "xcompout.xn"
+          ],
+          "db_forward": [
+            0.071330413335,
+            "xcompout.xp"
+          ],
+          "sb": [
+            0.884532503,
+            "xref.xctl.xp1.xt"
+          ],
+          "sb_forward": [
+            1.996803534e-05,
+            "xsh.xerr.xn1.xt"
+          ]
+        },
+        "06v0": {
+          "gs": [
+            3.740830261,
+            "xn1.xm"
+          ],
+          "gd": [
+            4.64466844,
+            "xsh.xclamp.xt"
+          ],
+          "gb": [
+            5.6632310288,
+            "xn1.xm"
+          ],
+          "ds": [
+            5.4289100645,
+            "xsh.xclamp.xt"
+          ],
+          "db": [
+            5.6632310288,
+            "xn2.xm"
+          ],
+          "db_forward": [
+            0.7708302609,
+            "xn2.xm"
+          ],
+          "sb": [
+            2.97,
+            "xn1.xm"
+          ],
+          "sb_forward": [
+            0.009598864841,
+            "xnand1.xm"
+          ]
+        }
+      },
+      "max_mim_v": [
+        5.4289100645,
+        "xco"
+      ],
+      "max_pnp_eb_v": [
+        0.57131530538,
+        "xref.xout"
+      ]
+    },
+    {
+      "point": "ff/ff/ff/ff/-40C/3.63V",
+      "step_ns": 0.2,
+      "supply_ramp": false,
+      "variant": "one_ns_load",
+      "measurements": {
+        "end_time": 2.4e-05,
+        "before_out_min": 4.84581,
+        "before_out_max": 4.87949,
+        "before_vr_min": 2.68632,
+        "before_vr_max": 2.93261,
+        "before_ref_min": 1.18492,
+        "before_ref_max": 1.18616,
+        "ramp_out_min": 4.7604,
+        "ramp_out_max": 4.87768,
+        "ramp_vr_min": 2.67776,
+        "ramp_vr_max": 2.93496,
+        "ramp_ref_min": 1.18418,
+        "ramp_ref_max": 1.18616,
+        "load_out_min": 4.84411,
+        "load_out_max": 4.87739,
+        "load_vr_min": 2.68709,
+        "load_vr_max": 2.93203,
+        "load_ref_min": 1.18493,
+        "load_ref_max": 1.18615,
+        "settled_out_min": 4.84411,
+        "settled_out_max": 4.87739,
+        "settled_vr_min": 2.68709,
+        "settled_vr_max": 2.93203,
+        "settled_ref_min": 1.18493,
+        "settled_ref_max": 1.18615,
+        "release_out_min": 4.84425,
+        "release_out_max": 4.90318,
+        "release_vr_min": 2.68567,
+        "release_vr_max": 2.93344,
+        "release_ref_min": 1.18492,
+        "release_ref_max": 1.18642,
+        "all_out_max": 4.9143441961,
+        "all_ref_max": 1.2134192018,
+        "all_vr_max": 3.0338045517,
+        "loaded_shunt_a": 0.0159933,
+        "unloaded_shunt_a": 0.0259783,
+        "loaded_input_a": 0.0688308,
+        "unloaded_input_a": 0.068802,
+        "loaded_driver_a": 0.0416332,
+        "unloaded_driver_a": 0.0416278,
+        "loaded_shunt_w": 0.077822,
+        "unloaded_shunt_w": 0.126456,
+        "twenty_clk": 5.81692e-08,
+        "twenty_clkb": 5.81692e-08
+      },
+      "mos_v": {
+        "03v3": {
+          "gs": [
+            3.0479707369,
+            "xcompout.xn"
+          ],
+          "gd": [
+            3.3156513225,
+            "xsh.xerr.xp2.xt"
+          ],
+          "gb": [
+            3.0479707369,
+            "xcompout.xn"
+          ],
+          "ds": [
+            3.630109791,
+            "xsh.xerr.xp2.xt"
+          ],
+          "db": [
+            3.630109791,
+            "xsh.xerr.xp2.xt"
+          ],
+          "db_forward": [
+            0.16486691674,
+            "xcompout.xp"
+          ],
+          "sb": [
+            1.292273674,
+            "xref.xctl.xp1.xt"
+          ],
+          "sb_forward": [
+            8.80497675e-05,
+            "xsh.xerr.xn1.xt"
+          ]
+        },
+        "06v0": {
+          "gs": [
+            4.604680156,
+            "xn1.xm"
+          ],
+          "gd": [
+            3.973113456,
+            "xsh.xclamp.xt"
+          ],
+          "gb": [
+            5.474921961,
+            "xn1.xm"
+          ],
+          "ds": [
+            4.9143441961,
+            "xsh.xclamp.xt"
+          ],
+          "db": [
+            5.474921961,
+            "xn2.xm"
+          ],
+          "db_forward": [
+            0.9746801557,
+            "xn2.xm"
+          ],
+          "sb": [
+            3.63,
+            "xn1.xm"
+          ],
+          "sb_forward": [
+            0.01473633338,
+            "xnand1.xm"
+          ]
+        }
+      },
+      "max_mim_v": [
+        4.9143441961,
+        "xco"
+      ],
+      "max_pnp_eb_v": [
+        0.82820492932,
+        "xref.xout"
+      ]
+    },
+    {
+      "point": "ss/ss/ss/ss/125C/2.97V",
+      "step_ns": 0.2,
+      "supply_ramp": false,
+      "variant": "one_ns_load",
+      "measurements": {
+        "end_time": 2.4e-05,
+        "before_out_min": 5.12167,
+        "before_out_max": 5.14658,
+        "before_vr_min": 2.77318,
+        "before_vr_max": 2.93448,
+        "before_ref_min": 1.2323,
+        "before_ref_max": 1.23429,
+        "ramp_out_min": 4.6917,
+        "ramp_out_max": 5.12321,
+        "ramp_vr_min": 2.77106,
+        "ramp_vr_max": 2.92686,
+        "ramp_ref_min": 1.22791,
+        "ramp_ref_max": 1.23451,
+        "load_out_min": 4.6917,
+        "load_out_max": 4.71835,
+        "load_vr_min": 2.7784,
+        "load_vr_max": 2.92071,
+        "load_ref_min": 1.23206,
+        "load_ref_max": 1.23451,
+        "settled_out_min": 4.6917,
+        "settled_out_max": 4.71835,
+        "settled_vr_min": 2.7784,
+        "settled_vr_max": 2.92071,
+        "settled_ref_min": 1.23206,
+        "settled_ref_max": 1.23451,
+        "release_out_min": 4.69331,
+        "release_out_max": 5.41617,
+        "release_vr_min": 2.76994,
+        "release_vr_max": 2.94757,
+        "release_ref_min": 1.23213,
+        "release_ref_max": 1.23954,
+        "all_out_max": 5.4161731613,
+        "all_ref_max": 1.2497311392,
+        "all_vr_max": 2.9611028371,
+        "loaded_shunt_a": 9.73282e-05,
+        "unloaded_shunt_a": 0.00654199,
+        "loaded_input_a": 0.0270596,
+        "unloaded_input_a": 0.0205213,
+        "loaded_driver_a": 0.0163781,
+        "unloaded_driver_a": 0.0133558,
+        "loaded_shunt_w": 0.000458531,
+        "unloaded_shunt_w": 0.033622,
+        "twenty_clk": 1.6283e-07,
+        "twenty_clkb": 1.6283e-07
+      },
+      "mos_v": {
+        "03v3": {
+          "gs": [
+            2.9850282732,
+            "xsense.xn"
+          ],
+          "gd": [
+            2.9849447298,
+            "xsense.xn"
+          ],
+          "gb": [
+            2.9850282732,
+            "xsense.xn"
+          ],
+          "ds": [
+            2.9721813162,
+            "xcomp.xn"
+          ],
+          "db": [
+            2.9721813162,
+            "xcomp.xn"
+          ],
+          "db_forward": [
+            0.11503453482,
+            "xcompout.xp"
+          ],
+          "sb": [
+            0.884530933,
+            "xref.xctl.xp1.xt"
+          ],
+          "sb_forward": [
+            6.02315779e-05,
+            "xsh.xerr.xn1.xt"
+          ]
+        },
+        "06v0": {
+          "gs": [
+            3.724397805,
+            "xn1.xm"
+          ],
+          "gd": [
+            4.612915925,
+            "xsh.xclamp.xt"
+          ],
+          "gb": [
+            5.6089431298,
+            "xn1.xm"
+          ],
+          "ds": [
+            5.4161731613,
+            "xsh.xclamp.xt"
+          ],
+          "db": [
+            5.6089431298,
+            "xn2.xm"
+          ],
+          "db_forward": [
+            0.7543978047,
+            "xn2.xm"
+          ],
+          "sb": [
+            2.97,
+            "xn1.xm"
+          ],
+          "sb_forward": [
+            0.01555022659,
+            "xnand1.xm"
+          ]
+        }
+      },
+      "max_mim_v": [
+        5.4161731613,
+        "xco"
+      ],
+      "max_pnp_eb_v": [
+        0.57101254205,
+        "xref.xout"
+      ]
+    }
+  ]
+}

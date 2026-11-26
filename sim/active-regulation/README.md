@@ -12,6 +12,31 @@ At 3.30 V, typical process and 25 °C, the integrated candidate sustained a 4.98
 
 The full screen measures 65 cases over the proposed MOS/temperature/VIN grid, with all three MIM corners at each high-input, hot/cold point. The resistor and bipolar corners track fast and slow MOS in the primary grid. The two crossed controls reverse both passive corners together. These simulations use Gear-2 and retain the greatest excursion of each gate, drain, source and body terminal pair over the complete 24 µs trace, together with the contributing instance. Positive body-forward values orient the junction for the MOS polarity. The 3.3 V and 6 V nameplates provide conservative comparisons; source/drain injection, lifetime, and current density require physical evidence. The circuit has no extracted well or interconnect resistance.
 
+The 65 independent 24 µs transients all completed. During the full 10 µs
+hold at 10 mA, VOUT spans **4.69170–5.10574 V** across all cases. The
+worst peak-to-peak swing over one hold is **36.57 mV**, at FS MOS, fast MIM,
+125 °C and 3.63 V. The largest load-release peak is **5.44194 V**, at slow
+MOS/MIM/resistor/bipolar, 25 °C and 2.97 V. Across the 30 high-input
+hot/cold cases the largest output anywhere on the 24 µs trace is
+**5.23716 V**. The nominal row reproduces the standalone nominal record
+exactly. These tests measure the proposed output voltage, load, ripple and
+no-load ceiling on the schematic. [All 65 cases](records/pvt.json)
+
+Stress and dissipation still constrain this design. The maximum thick-oxide
+terminal differential is 5.74246 V. Its most forward-biased drain/body
+junction reaches 0.97831 V. The largest thin-oxide drain/body differential
+is 3.64875 V, and 50/65 cases have a thin-oxide terminal pair greater than
+3.3 V. No-load shunt dissipation reaches 131.535 mW. The measurement needs
+a foundry-supported junction-current and duration limit, body-tie extraction
+and a thermal assessment before the device-stress claim can close.
+
+Removing the shunt lets the fast/cold 3.63 V output reach 6.27646 V.
+With both feedback paths intact, a 1 ns load edge yields a 4.84411 V loaded
+floor and 4.90318 V release peak there. At slow/hot 2.97 V the same edge
+gives 4.69170 V and 5.41617 V. Forcing the clock driver to VIN at the
+slow/hot point raises the floor to 4.81138 V and the peak to 5.42891 V.
+[Isolation and load-edge controls](records/isolation.json)
+
 ## Output shunt response
 
 The disturbance is a 10 mA increase from 5 to 15 mA in 1 ns. The peak result is the positive output excursion divided by 10 mA. The AC result is the magnitude of the bare shunt impedance at 15 mA. Eleven runs cover the nominal point and each high-input, hot/cold MOS corner with its tracking passive models.
