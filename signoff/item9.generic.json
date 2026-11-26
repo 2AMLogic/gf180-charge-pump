@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "kind": "generic",
+  "status": "pass",
+  "t1_item": 9,
+  "summary": "T1 item 9 (Testbenches shipped): 24/24 attestation checks passed (klt signoff --attest)",
+  "source": "signoff/item9.json",
+  "attestation": {
+    "producer": "klt signoff --attest",
+    "inventory_schema_version": 1,
+    "hash_algorithm": "sha256-raw-bytes",
+    "check_count": 24,
+    "passed_count": 24,
+    "checks": [
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "signoff/cold_start.py",
+        "passed": true,
+        "content_hash": "sha256:389f7af3413408803b1f6186968f174ff6882120ac62a6e3ce12d67500737212"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/benches/dut_reference.spice",
+        "passed": true,
+        "content_hash": "sha256:4f0149d55c00caf489959b0948faa7a3b7ced79983ed88fc6a6fe172c14e9be1"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/benches/generate.py",
+        "passed": true,
+        "content_hash": "sha256:7cda0606ed568ae64dcc33bf0f388156004e45b4e30e760dbf8d556b143035e3"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/benches/single_point.py",
+        "passed": true,
+        "content_hash": "sha256:240f01b06305cf4fe570bab99695391030da0c9808ad41bcd49ef94947abbb1c"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/cap-model/extract.py",
+        "passed": true,
+        "content_hash": "sha256:43d10eb4b6592b80209f60f553b800d361f8f77de5677a1ad2a20ae934f237c5"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/device-stress/testbench/netlist.spice",
+        "passed": true,
+        "content_hash": "sha256:61c7a6f7fccb5a3477516d6819266bf40c41f110b54f12b1a9068551cc94962d"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/device-stress/testbench/tb.json",
+        "passed": true,
+        "content_hash": "sha256:a82b0f79268745c7a0f7c3b9e42650c00f3b6a2cdfc236646edbf1f92907e7f3"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/__init__.py",
+        "passed": true,
+        "content_hash": "sha256:6a43ff22e6e6577f0259dff805a36eeb783e45c1dcffde474bca700358fe5484"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/corners.py",
+        "passed": true,
+        "content_hash": "sha256:331040eca179f1d88b5ecf9e1c4384927442b04ceaf7b4ce7b4323f7ca0aa29d"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/evidence.py",
+        "passed": true,
+        "content_hash": "sha256:3c0ce2b782016b6ff53121929ad53b0217a7ca34ce93f01d329f2319d910e0d1"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/pdk.py",
+        "passed": true,
+        "content_hash": "sha256:f460d26bc0a069e5108ae836a684ba98c9965c5fea68afd7a30736482abae96b"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/runner.py",
+        "passed": true,
+        "content_hash": "sha256:6f798ba1f303facf8b76e57a5b341dc44e29b8499ac2e6bba85a4af98391ae41"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/strict_json.py",
+        "passed": true,
+        "content_hash": "sha256:ab79a0d94ab1f107be72384eb3e55add6dea996cc5a7c7b162985945af13c176"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/testbench.py",
+        "passed": true,
+        "content_hash": "sha256:bb3f3cd62822ddf031a9ddad404f70b97988bad8857316228bcc13818bde8219"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/load-step/testbench/netlist.spice",
+        "passed": true,
+        "content_hash": "sha256:8ec3f62e573940ef88c39f9f48345f824d98efc9c8c955a09fe66654212ff2d2"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/load-step/testbench/tb.json",
+        "passed": true,
+        "content_hash": "sha256:dd8abde7826dd235eb212dc83c21107ea6999c9cd4be1590b27c874594b8418d"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/load/testbench/netlist.spice",
+        "passed": true,
+        "content_hash": "sha256:09c0124a5768fe3900023f51a6678b46fac63f0e0ec2550a443dcf0dcd16e8de"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/load/testbench/tb.json",
+        "passed": true,
+        "content_hash": "sha256:57cf17e6ce8cdee5dc9a3fb2b64c136b5499bc9d5f499fcd789645861d518d57"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/pdk.json",
+        "passed": true,
+        "content_hash": "sha256:10624b848e3b30719b2a3f0213eefec1b973f585dc1c64e79a73a6d212b902a8"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/startup/testbench/netlist.spice",
+        "passed": true,
+        "content_hash": "sha256:fafc656e5f92ca2af59dce4b5dfb3d1df50b89588f5cc0b3775573651e4a35c1"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/startup/testbench/tb.json",
+        "passed": true,
+        "content_hash": "sha256:b7f2c09c86c94ed17abd0f19e3026548a4f5b879ffcb263f70060c48fed44ed3"
+      },
+      {
+        "check": "command",
+        "role": "cold_start",
+        "argv": [
+          "python3",
+          "signoff/cold_start.py"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true
+      },
+      {
+        "check": "pin",
+        "role": "pdk",
+        "passed": true,
+        "value": {
+          "name": "gf180mcuD",
+          "revision": "f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7"
+        }
+      },
+      {
+        "check": "pin",
+        "role": "tools",
+        "passed": true,
+        "value": {
+          "klayout-tools": "0.9.2",
+          "ngspice": "47 (recorded model extraction); 45.2 also exercised by CI"
+        }
+      }
+    ]
+  },
+  "provenance": {
+    "klt_version": "0.9.2",
+    "klayout_version": null,
+    "pdk": null,
+    "deck": null,
+    "input": {
+      "path": {
+        "path": "signoff/item9.json",
+        "scope": "repo"
+      },
+      "content_hash": "sha256:caf58866a42580211e75b0a5f81aa1200acf55561da8e0e57267d6e55dd859ff"
+    }
+  }
+}

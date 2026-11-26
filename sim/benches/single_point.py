@@ -5,12 +5,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from harness import corners, pdk, runner, testbench
 
-def run(slug, corner="tt", temp=25.0, vdd=3.3, tb_dir=None):
+def run(slug, corner="tt", temp=25.0, vdd=3.3, tb_dir=None, *, num_threads=0):
     sim = Path(__file__).resolve().parent.parent
     tb = testbench.load(Path(tb_dir) if tb_dir else sim / slug / "testbench")
     point = corners.build_grid(corners.resolve_corners([corner]), [temp], [vdd])[0]
     with tempfile.TemporaryDirectory() as d:
-        return tb, runner.run_point(tb, pdk.find_pdk(sim), point, Path(d))
+        return tb, runner.run_point(tb, pdk.find_pdk(sim), point, Path(d), num_threads=num_threads)
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(); ap.add_argument("slug")

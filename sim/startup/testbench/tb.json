@@ -18,7 +18,7 @@
     "tran 1n 121u 0 1n"
   ],
   "measure": {
-    "startup_to_4500mv_at_10ma_s": "minimum(time+(1-(v(vout)>4.5))*1)-1u",
+    "startup_to_4500mv_at_10ma_s": "minimum(time+(1-(v(vout) gt 4.5))*1)-1u",
     "stress_xmn1_vds_v": "maximum(abs(v(xdut.a)-v(vin)))",
     "stress_xmn1_vgs_v": "maximum(abs(v(xdut.b)-v(vin)))",
     "stress_xmn1_vdb_v": "maximum(abs(v(xdut.a)-0))",
