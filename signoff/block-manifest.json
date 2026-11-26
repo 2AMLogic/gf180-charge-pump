@@ -1,0 +1,14 @@
+{
+  "block": "gf180-charge-pump",
+  "kind": "analog",
+  "evidence": {
+    "9": {
+      "file": "signoff/item9.generic.json",
+      "content_hash": "sha256:caf58866a42580211e75b0a5f81aa1200acf55561da8e0e57267d6e55dd859ff"
+    },
+    "10": {
+      "file": "signoff/item10.generic.json",
+      "content_hash": "sha256:bf096347b7b3385545e279b6ee0e5376b5eccd95ea26aa52f9e31e0b5a80d838"
+    }
+  }
+}

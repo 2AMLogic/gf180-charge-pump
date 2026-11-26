@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "kind": "t1-attestation-inventory",
+  "t1_item": 10,
+  "description": "Block README, reproduction instructions, licence, CI and the simulation gate used by CI.",
+  "hygiene": [
+    "README.md",
+    "LICENSE",
+    "signoff/README.md",
+    "signoff/check.sh",
+    "signoff/requirements.txt",
+    "sim/README.md",
+    "sim/tests/test_simgate.py",
+    ".github/workflows/sim-tests.yml",
+    "sim/harness/simgate.py"
+  ],
+  "checks": [
+    {
+      "name": "simulation gate rejects missing tools when CI requires simulation",
+      "argv": [
+        "python3",
+        "-m",
+        "unittest",
+        "sim.tests.test_simgate",
+        "-q"
+      ]
+    },
+    {
+      "name": "block README links the reproduction instructions",
+      "argv": [
+        "git",
+        "grep",
+        "-qF",
+        "(signoff/README.md)",
+        "--",
+        "README.md"
+      ]
+    }
+  ]
+}
