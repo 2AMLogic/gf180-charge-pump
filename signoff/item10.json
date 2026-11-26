@@ -10,7 +10,8 @@
     "signoff/requirements.txt",
     "sim/README.md",
     "sim/tests/test_simgate.py",
-    ".github/workflows/sim-tests.yml"
+    ".github/workflows/sim-tests.yml",
+    "sim/harness/simgate.py"
   ],
   "checks": [
     {

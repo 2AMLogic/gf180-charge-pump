@@ -4,11 +4,11 @@
   "evidence": {
     "9": {
       "file": "signoff/item9.generic.json",
-      "content_hash": "sha256:9e8eff51efcd2a079063c0aa0bc884e629f00708e7c400d1ebf6c2b43708ca58"
+      "content_hash": "sha256:caf58866a42580211e75b0a5f81aa1200acf55561da8e0e57267d6e55dd859ff"
     },
     "10": {
       "file": "signoff/item10.generic.json",
-      "content_hash": "sha256:e1f19fc36dfd59efacd564b9c6873713638508140b12f99f702eec0db196d2e6"
+      "content_hash": "sha256:9476a675765b24a3c2402e6fd2605193304a3f8857f0250deac5fdeb539d2d98"
     }
   }
 }

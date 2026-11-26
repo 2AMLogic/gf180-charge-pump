@@ -3,14 +3,14 @@
   "kind": "generic",
   "status": "pass",
   "t1_item": 10,
-  "summary": "T1 item 10 (Repo hygiene): 9/9 attestation checks passed (klt signoff --attest)",
+  "summary": "T1 item 10 (Repo hygiene): 10/10 attestation checks passed (klt signoff --attest)",
   "source": "signoff/item10.json",
   "attestation": {
     "producer": "klt signoff --attest",
     "inventory_schema_version": 1,
     "hash_algorithm": "sha256-raw-bytes",
-    "check_count": 9,
-    "passed_count": 9,
+    "check_count": 10,
+    "passed_count": 10,
     "checks": [
       {
         "check": "present",
@@ -53,6 +53,13 @@
         "path": "sim/README.md",
         "passed": true,
         "content_hash": "sha256:a402a60eee2446a6ea4084f8296d58bed8b6c5a14baecb4465110ed02eda4ec6"
+      },
+      {
+        "check": "present",
+        "role": "hygiene",
+        "path": "sim/harness/simgate.py",
+        "passed": true,
+        "content_hash": "sha256:10415d0ed3d60e95b07fef563a91345afc0f8ea07f1d86dc949d55c765a8e241"
       },
       {
         "check": "present",
@@ -104,7 +111,7 @@
         "path": "signoff/item10.json",
         "scope": "repo"
       },
-      "content_hash": "sha256:e1f19fc36dfd59efacd564b9c6873713638508140b12f99f702eec0db196d2e6"
+      "content_hash": "sha256:9476a675765b24a3c2402e6fd2605193304a3f8857f0250deac5fdeb539d2d98"
     }
   }
 }
