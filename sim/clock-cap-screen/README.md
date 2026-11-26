@@ -31,8 +31,8 @@ For each of the 24 MOS instances, the bench records the signed extrema of all si
 | Device group · unpadded nameplate | VDS (V) | VGS (V) | VDB (V) | VGB (V) | VGD (V) | VSB (V) |
 |---|---:|---:|---:|---:|---:|---:|
 | Power PMOS · 6 V | −2.770…0.972 | −2.770…0.972 | −2.770…0.972 | −2.770…0.972 | −2.922…2.922 | 0 |
-| Power NMOS · 6 V | −4.618…2.780 | −4.618…2.780 | −0.991…5.945 | −0.991…5.945 | −2.922…2.922 | 2.970…3.630 |
-| Oscillator and NAND · 6 V | −2.987…2.971 | −2.987…2.997 | −2.987…2.971 | −2.987…2.997 | −2.971…2.997 | −0.012…2.300 |
+| Power NMOS · 6 V | −4.619…2.780 | −4.619…2.780 | −0.991…5.945 | −0.991…5.945 | −2.922…2.922 | 2.970…3.630 |
+| Oscillator and NAND · 6 V | −2.987…2.971 | −2.987…2.997 | −2.987…2.997 | −2.987…2.997 | −2.971…2.997 | −0.012…2.300 |
 | Clock drivers · 3.3 V | −3.063…3.082 | −3.006…3.006 | −3.063…3.082 | −3.006…3.006 | −2.995…3.002 | 0 |
 
 The table covers all 135 shunted grid traces. The limiting NMOS body-referenced excursion reaches 5.945 V, and the driver maximum magnitude reaches 3.082 V. All six terminal differences stay inside the unpadded voltage-class magnitudes on this grid. With the shunt open the NMOS reaches 6.370 V in the cold trapezoidal control and 6.330 V in the cold Gear control. Reverse junction bias, forward injection, time above a limit and foundry operating rules require separate reliability review. The comparisons here use the unpadded device ratings.

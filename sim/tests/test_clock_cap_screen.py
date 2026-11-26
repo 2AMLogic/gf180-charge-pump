@@ -1,5 +1,6 @@
 """Keep the physical-clock records tied to the circuit and its two-terminal measurements."""
 
+from decimal import Decimal, ROUND_HALF_UP
 import hashlib
 import itertools
 import json
@@ -9,10 +10,20 @@ import unittest
 
 
 SCREEN = Path(__file__).resolve().parents[1] / "clock-cap-screen"
+PAIRS = ("ds", "gs", "db", "gb", "gd", "sb")
 
 
 def record(suite):
     return json.loads((SCREEN / "records" / f"{suite}.json").read_text())
+
+
+def rounded(value):
+    text = str(Decimal(repr(value)).quantize(Decimal("0.001"), rounding=ROUND_HALF_UP))
+    return text.replace("-", "\u2212")
+
+
+def span(low, high):
+    return "0" if low == high == 0 else f"{rounded(low)}…{rounded(high)}"
 
 
 class ClockCapScreenTest(unittest.TestCase):
@@ -77,6 +88,29 @@ class ClockCapScreenTest(unittest.TestCase):
         self.assertEqual(len(open_controls), 3)
         for r in open_controls:
             self.assertGreater(max(r["terminal_extrema_v"][p][1] for p in ("a-0", "b-0")), 6.0)
+
+    def test_readme_mos_stress_table_matches_grid_extrema(self):
+        result = record("terminal-stress")
+        devices = result["device_terminals"]
+        names = {
+            "Power PMOS": ("xp1", "xp2"),
+            "Power NMOS": ("xn1", "xn2"),
+            "Oscillator and NAND": ("xnand1", "xnand2", "xpand1", "xpand2", "xring1.xn", "xring1.xp", "xring2.xn", "xring2.xp"),
+            "Clock drivers": ("xsense.xn", "xsense.xp", "xtrue.xn", "xtrue.xp", "xtrueout.xn", "xtrueout.xp", "xcomp.xn", "xcomp.xp", "xcomp2.xn", "xcomp2.xp", "xcompout.xn", "xcompout.xp"),
+        }
+        self.assertEqual(sorted(sum(names.values(), ())), sorted(devices))
+        lines = (SCREEN / "README.md").read_text().splitlines()
+        grid = [row for row in result["records"] if row["suite"] == "grid"]
+        for group, members in names.items():
+            ratings = {devices[name]["rating_v"] for name in members}
+            self.assertEqual(len(ratings), 1)
+            rows = [[field.strip() for field in line.strip("|").split("|")] for line in lines if line.startswith(f"| {group} · ")]
+            self.assertEqual([row[0] for row in rows], [f"{group} · {ratings.pop():g} V"])
+            self.assertEqual(len(rows[0]), 1 + len(PAIRS))
+            for pair, cell in zip(PAIRS, rows[0][1:]):
+                extrema = [row["terminal_extrema_v"]["-".join(devices[name]["pairs"][pair])] for row in grid for name in members]
+                with self.subTest(group=group, pair=pair):
+                    self.assertEqual(cell, span(min(low for low, _ in extrema), max(high for _, high in extrema)))
 
     def test_coupon_native_coverage_and_provenance(self):
         digest = hashlib.sha256((SCREEN / "records/cap-coupon.gds").read_bytes()).hexdigest()
