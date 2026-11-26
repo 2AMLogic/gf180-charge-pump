@@ -4,10 +4,6 @@
   "t1_item": 10,
   "description": "Block README, reproduction instructions, licence, CI and the simulation gate used by CI.",
   "hygiene": [
-    {
-      "path": "README.md",
-      "attest": "presence"
-    },
     "LICENSE",
     "signoff/README.md",
     "signoff/check.sh",
@@ -25,6 +21,17 @@
         "unittest",
         "sim.tests.test_simgate",
         "-q"
+      ]
+    },
+    {
+      "name": "block README links the reproduction instructions",
+      "argv": [
+        "git",
+        "grep",
+        "-qF",
+        "(signoff/README.md)",
+        "--",
+        "README.md"
       ]
     }
   ]
