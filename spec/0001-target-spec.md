@@ -1,21 +1,17 @@
 # 0001 — Target specification for the on-die program-supply charge pump
 
-Status: RATIFIED on merge
+Status: RATIFIED
+
+Effective only after both independent reviews, operator approval of the reviewed commit, and merge under §7.
 
 Issue: #1. Classification: changes spec rows and bounds, so both the EE review
 and the market review apply (CLAUDE.md, Ratification).
 
-This record proposes the target-spec table row by row. It is analytic only:
-no topology is chosen, nothing is simulated, and every number marked
-*estimate* is a hand calculation that a later bench (#2) must confirm or
-replace. Framing: a programming supply for on-die OTP cells.
+This record defines proposed acceptance criteria for a programming supply for on-die OTP. The calculations in §3 guide sizing. The candidate measurements below are schematic and capacitor-layout evidence. Topology selection and acceptance of a routed core remain open.
 
 ## 1. Inputs inherited, and what is not known
 
-The output and load rows inherit the program-supply assumptions A1-A3 of
-[gf180-efuse-otp](https://github.com/2AMLogic/gf180-efuse-otp): 5.0 V ±10%,
-≥ 10 mA, 10 µs. Those assumptions have **no PDK source**. This record treats
-them as targets, not measured facts.
+The host eFuse spec assumes 5.0 V ±10% (A1), at least 10 mA through the program path (A2), and a nominal 10 µs pulse with a controller range of 1–100 µs (A3). The host identifies these values as assumptions and provides no PDK programming guarantee. S3 keeps the nominal minimum. Interface qualification must also exercise both endpoints of the advertised controller range under S2 and S6. [Host program supply, current and pulse rows](https://github.com/2AMLogic/gf180-efuse-otp/blob/d6399af39bad891b24b7b45cd93d1f8aeb6a0aa6/spec/efuse-otp.md)
 
 ## 2. Proposed specification table
 
@@ -26,7 +22,7 @@ Every output-voltage row states its load current and corner.
 | S1 | Input supply | 2.97-3.63 V (3.3 V ±10%) | all | README draft |
 | S2 | Output voltage | 4.5-5.5 V | I_load = 10 mA, all PVT corners (tt/ff/ss/fs/sf × −40/25/125 °C × VDD 2.97/3.30/3.63 V) | inherited A1; upper bound also set by §4 |
 | S3 | Load current | ≥ 10 mA, continuous for ≥ 10 µs | at S2 voltage, worst corner | inherited A2/A3 |
-| S4 | Enable to output in spec | ≤ 10 µs | I_load = 0 → 10 mA step after settle, worst corner | README draft; §3 shows reservoir charge is small against this |
+| S4 | Enable to output in spec | ≤ 10 µs | discharged reservoir, stable S1 input, EN rising, load initially zero, worst corner | measure time to entering [4.5, 5.5] V and staying in band until load application; test the subsequent 0 → 10 mA step separately |
 | S5 | Output ripple | ≤ 100 mV p-p | I_load = 10 mA, worst corner | README draft; sets output capacitance (§3) |
 | S6 | Device stress | all gate, drain-source and body-junction differentials within §4 limits, transients included | all corners, including unloaded and switching at VDD = 3.63 V | §4 |
 | S7 | Core area (footprint including all capacitors) | **≤ 0.50 mm²** (draft: 0.25 mm²) | n/a | §3; **proposed change to a draft row** |
@@ -43,10 +39,7 @@ coexist with them. They stay in the README as named, unsized stretch items.
 **The load row (S3) and ripple row (S5) govern; the area row moves.** The
 sizing below shows 10 mA at ≤ 100 mV ripple cannot fit 0.25 mm² at any clock
 rate this record considers reachable. S7 is therefore proposed at ≤ 0.50 mm²,
-which §3 shows is reachable only at about 100 MHz or above. That clock rate is
-an assumption about the 6 V devices at VDD = 2.97 V and is **not verified**.
-The EE review decides whether the load row, the ripple row, or the area row
-gives way. No row is claimed reachable beyond what §3 supports.
+an integration budget. The first-order example at 100 MHz leaves 0.14 mm² for overhead. The 65-case transistor candidate oscillates above 100 MHz throughout its sampled grid. Its actual capacitor placement leaves only 0.057580 mm² for everything else. A full routed implementation must meet S3, S5 and S7 together. A shortfall returns to the operator for disposition. [Candidate evidence](#candidate-measurements-and-remaining-acceptance-tests)
 
 ### What the pump commits to if A1-A3 move
 
@@ -59,7 +52,7 @@ gives way. No row is claimed reachable beyond what §3 supports.
   107 MHz. A higher current therefore requires a new decision checking
   achievable clock over PVT, full footprint, ripple and terminal stress.
 - **A3 (duration) shortens or lengthens:** the continuous pump is unchanged,
-  because it is sized for continuous current. A duration short enough to make a
+  but independence from duration must be measured with the host’s 1, 10 and 100 µs loads, including both edges and the subsequent open load. A duration short enough to make a
   pulsed reservoir viable is the separate candidate in §3.2, not a change to
   S3.
 - **A1 (voltage) changes:** S2 covers the stated output band of 4.5–5.5 V.
@@ -86,7 +79,7 @@ Source: the PDK ngspice models, `gf180mcuD/libs.tech/ngspice/sm141064.ngspice`
 (`ciel enable --pdk-family gf180mcu`; upstream model repository
 `efabless/globalfoundries-pdk-libs-gf180mcu_fd_pr`).
 
-- `cap_mim_2f0` (M2/M3, M3/M4, M4/M5 and M5/M6 variants): `c_cox = 1.99e-3 F/m²`
+- The shared model library includes several `cap_mim_2f0` layer variants. The GF180D physical candidate uses option B, M4/M5, with five routing metals. Its density model uses `c_cox = 1.99e-3 F/m²`
   × `mim_corner_2p0ff`, i.e. **1.99 fF/µm²** typical. The corner multiplier is
   0.90 (ff) to 1.10 (ss), so the minimum density is **1.791 fF/µm²**.
   Divide the capacitance required at the minimum corner by this density to
@@ -129,8 +122,7 @@ floor is 4.5 V at 10 mA, so the total allowed drop is
 
 R_total = (2 × 2.97 − 4.5) V / 10 mA = **144 Ω** (estimate).
 
-Split it evenly: 72 Ω slow-switching-limit (SSL) and 72 Ω for switch
-resistance and parasitics. The even split is an assumption.
+Allocate 72 Ω to the slow-switching limit (SSL) and 72 Ω to the effective fast-switching limit (FSL), including conducting switches, routing and vias. The FSL term combines the path resistances at the output, weighted by charge transfer and switching duty. Linear addition is a conservative sizing allocation. Check loaded output, current and ripple directly on the switched circuit and repeat with extracted paths. The ripple formula assumes two interleaved deliveries per period. One delivery per period doubles the reservoir requirement.
 
 SSL output resistance of a doubler with total flying capacitance C_fly at
 clock f_sw: R_SSL = 1 / (f_sw · C_fly). The minimum-corner flying
@@ -227,7 +219,7 @@ require evidence for the selected devices.
   own decision record. Outputs above about 6 V are out of scope.
 - A topology that meets the output by exceeding a rating is a failing result.
 
-### Per-candidate stress argument (analytic estimates, nothing simulated)
+### First-order stress arguments for the candidate topologies
 
 All figures use VDD = 3.63 V, the high corner; V_d ≈ 0.7 V is an assumed diode
 or Vth drop, unsourced.
@@ -269,12 +261,31 @@ follow-on record with simulated evidence.
   that layout only. Whether the foundry permits pump metal or a MIM
   reservoir over the fuse body remains open. The area budget takes no
   credit for that placement. [Native array DRC report](https://github.com/2AMLogic/gf180-efuse-otp/blob/fa9bcc4b104b6fa2eebc3d481856b1b0615c7090/layout/drc-array.native.report.json) · [eFuse issue #60](https://github.com/2AMLogic/gf180-efuse-otp/issues/60)
-- The ≥ 100 MHz clock rate on 6 V devices at 2.97 V, and the 72 Ω switch
-  budget, are assumptions for the topology record to test.
+- The candidate schematic tests the 100 MHz assumption. Extracted clock and interconnect loading, startup, and the FSL allocation still require a routed circuit and the measured load sequence.
 - The chosen devices' junction and drain constraints, actual body connections
   and transient terminal extrema remain to be verified under §4.
 - MIM density is taken from the simulation model, not a measured wafer value;
   the model's own corner spread is ±10%.
+
+### Candidate measurements and remaining acceptance tests
+
+The 65 integrated ngspice 46 traces use five MOS process sections, three temperatures and 2.97/3.30/3.63 V. Slow and fast MOS track their resistor and BJT corners, and TT/FS/SF use typical passives. Each of the high-input hot and cold cases exercises all three MIM corners. Separate passive-cross and transient-timestep controls are available. The 24 µs waveform ramps the load for 10 µs, holds 10 mA for 10 µs, then releases it. The following measurements refer to the schematic at commit `31635c5`. [65 traces](https://github.com/2AMLogic/gf180-charge-pump/blob/31635c530771b3f5dc070c3fc1cd1970fbb03a47/sim/active-regulation/records/pvt.json) · [Load-edge and isolation controls](https://github.com/2AMLogic/gf180-charge-pump/blob/31635c530771b3f5dc070c3fc1cd1970fbb03a47/sim/active-regulation/records/isolation.json)
+
+| Review quantity | Result and scope |
+|---|---|
+| S2/S3/S5 | 4.69170–5.10574 V across the full 10 mA hold. Worst individual hold ripple was 36.57 mV. |
+| Clock sizing | The slower of the two phases in each case ranged from 122.83 to 343.83 MHz. Each frequency is 20 divided by the measured elapsed time between crossings 20 cycles apart at full load. |
+| S6/S8 | The largest load-release excursion and reservoir plate differential were 5.44194 V. A thin-oxide drain/body differential reached 3.64875 V and a thick-oxide drain/body junction reached 0.97831 V forward. S6 remains open for voltage-class, junction injection, well and lifetime review. |
+| S7 | The placed M4/M5 capacitors occupy 0.442420 mm². Their native MIM DRC passes, while the full native deck finds five density markers on the unwired coupon. The design has 0.057580 mm² left for switches, control, wells, guard rings, power delivery, fill and routing. [Capacitor GDS and DRC](https://github.com/2AMLogic/gf180-charge-pump/tree/31635c530771b3f5dc070c3fc1cd1970fbb03a47/sim/active-regulation/records) |
+| Input supply and efficiency | Loaded average VIN current reaches 68.979 mA. At the worst-efficiency corner, the settled VOUT extrema bracket the 10 mA power efficiency between 19.36% and 19.47%. At nominal the bracket is 34.96–35.16%. At enabled no load, maximum input current is 68.940 mA (250.25 mW input), including up to 131.535 mW in the shunt. |
+
+Measure host supply power as the time average of `−VIN × I(VIN source)` and useful output power as the time average of `VOUT × Iload` over the same settled interval. Report startup peak current, average on-load current, enabled idle power, EN-low supply current and reverse leakage with VOUT precharged separately. A host supply and thermal allocation is needed before specifying numerical product limits for these quantities. The candidate values above are measurements to compare against that allocation.
+
+For **Area-Eff**, audit the final routed core with pinned `klt economy`. Use the 500,000 µm² S7 budget and require bbox tightness 1.0. Report each dead margin, the largest empty regions and utilization. Identify the guard, matching, isolation and routing function of any proposed reserved space. The analog core needs a layout-derived utilization floor. On the capacitor-only GDS, utilization is 92.79% with zero edge margins, bbox tightness 1.0 and a largest connected empty region of 31,893.76 µm². Each MIM and its shielding and routing consume upper-metal area. Any increase in reservoir area to limit S8 transients also consumes S7 headroom. [MIM placement](https://github.com/2AMLogic/gf180-charge-pump/blob/31635c530771b3f5dc070c3fc1cd1970fbb03a47/sim/active-regulation/records/capacitors.gds)
+
+For **statistical verification (T1 item 6)**, the reference, limiter, feedback ratio and PGOOD comparator introduce mismatch into S2, S8 and the 4.5 V indication. Run the pinned mismatch-enabled GF180D device models with independent seeds, save the seed list and report the joint fraction meeting those rows with a stated binomial confidence interval. Check the worst deterministic corners as well as nominal. Record PGOOD rising/falling thresholds, hysteresis and false assertions before a valid rail under ramp/load/release; PGOOD must be low while VOUT is below 4.5 V. A comparator implementation, offset distribution and host-approved transition tolerance are still needed. A deterministic PVT matrix supplies no mismatch yield.
+
+For **electromigration and body current**, extract the actual current paths and measure each switching metal segment, via array, body tie and supply entry under load, release and worst-case inrush. Check directed or bidirectional current, temperature, duty and parallel via sharing against the applicable GF180 reliability limits at 125 °C. As an initial routing bound, carrying the 68.979 mA measured average through one unidirectional trunk at 125 °C requires at least 45.99 µm of 11 kÅ MetalTop at 1.5 mA/µm, or 102.96 µm on M1–M4 at 0.67 mA/µm. A transition limited to 0.18 mA per cut requires at least 384 equally sharing vias. These figures use the foundry limit directly. The actual branch currents, current sharing and additional margin must be checked on the routed design. Verify guard collection and allowed junction currents for any forward-biased well. Supply-current averages and terminal-voltage extrema alone leave these tests open. [GF180 electromigration rules](https://gf180mcu-pdk.readthedocs.io/en/latest/physical_verification/design_manual/drm_14_2.html)
 
 ## 6. Interface
 

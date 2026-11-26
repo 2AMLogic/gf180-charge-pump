@@ -93,11 +93,7 @@ The stretch column lists goals outside that decision.
 The output and load rows are the program-supply assumptions of the sibling
 [gf180-efuse-otp](https://github.com/2AMLogic/gf180-efuse-otp) (its
 assumptions A1–A3, which have no PDK source). They are inherited as targets
-here, not measured facts. The central tension the review must settle is
-**area vs. current**: 10 mA at ≤ 100 mV ripple needs about 0.36 mm² of MIM
-capacitance at 100 MHz (more at lower clocks) before switches and overhead,
-so the record proposes that the load and ripple rows govern and the area row
-moves to ≤ 0.50 mm². The reviewers decide.
+here, not measured facts. The proposed 0.50 mm² limit gives the current capacitor placement 0.057580 mm² for the rest of the routed core. The 65-case transistor candidate sustains the nominal 10 µs, 10 mA load, while junction stress, input power, mismatch and the routed footprint still require review. The host supports 1–100 µs pulses. [Measurements and acceptance tests](spec/0001-target-spec.md#candidate-measurements-and-remaining-acceptance-tests)
 
 Issue #1 takes this target spec through review. A separate EE reviewer and a
 separate market reviewer, neither the author of the PR or of the design, read centrally pinned
