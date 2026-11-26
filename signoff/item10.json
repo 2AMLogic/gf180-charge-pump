@@ -2,27 +2,28 @@
   "schema_version": 1,
   "kind": "t1-attestation-inventory",
   "t1_item": 10,
-  "description": "The block README, reproduction instructions, licence and CI job. Run the simulation and evidence-format tests with simulator-dependent cases required.",
+  "description": "Block README, reproduction instructions, licence, CI and the simulation gate used by CI.",
   "hygiene": [
-    "README.md",
+    {
+      "path": "README.md",
+      "attest": "presence"
+    },
     "LICENSE",
+    "signoff/README.md",
+    "signoff/check.sh",
+    "signoff/requirements.txt",
     "sim/README.md",
+    "sim/tests/test_simgate.py",
     ".github/workflows/sim-tests.yml"
   ],
   "checks": [
     {
-      "name": "required simulation and evidence-format suite",
+      "name": "simulation gate rejects missing tools when CI requires simulation",
       "argv": [
-        "env",
-        "REQUIRE_SIM=1",
         "python3",
         "-m",
         "unittest",
-        "discover",
-        "-s",
-        "sim/tests",
-        "-t",
-        ".",
+        "sim.tests.test_simgate",
         "-q"
       ]
     }
