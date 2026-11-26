@@ -82,14 +82,19 @@ Source: the PDK ngspice models, `gf180mcuD/libs.tech/ngspice/sm141064.ngspice`
 
 - `cap_mim_2f0` (M2/M3, M3/M4, M4/M5 and M5/M6 variants): `c_cox = 1.99e-3 F/m²`
   × `mim_corner_2p0ff`, i.e. **1.99 fF/µm²** typical. The corner multiplier is
-  0.90 (ff) to 1.10 (ss), so the **minimum is 0.9 × 1.99 = 1.79 fF/µm²**. The
-  sizing below uses 1.79 fF/µm² for area and requires C at the −10% corner.
+  0.90 (ff) to 1.10 (ss), so the minimum density is **1.791 fF/µm²**.
+  Divide the capacitance required at the minimum corner by this density to
+  obtain plate area. Equivalently, divide nominal installed capacitance by
+  the typical density of 1.99 fF/µm².
   The fringe term (`c_capsw` = 2.38e-10 F/m, about 0.24 fF/µm of perimeter)
   is ignored; this makes the area slightly conservative for large plates.
 - The device list header marks `cap_mim_2f0fF` "usable for Volt <= 6 V across
-  capacitor". The MIM voltage in this record is at most about VDD (3.63 V), so
-  this is respected; the cap's bottom-plate parasitic to substrate is a
-  layout item for the topology record.
+  capacitor". A flying capacitor charged across the supply sees up to 3.63 V
+  in that phase. The VOUT-to-ground reservoir sees the full output, up to
+  5.5 V at the S2/S8 limit, leaving 0.5 V to the stated 6 V limit. Verify
+  the differential voltage across each capacitor during startup, switching
+  and load release for the chosen circuit. The topology record also needs
+  the bottom-plate parasitic to substrate.
 - MOS capacitors (`cap_nmos_06v0`): C is bias-dependent,
   `c = A·(0.001107 + 0.00107·tanh(6.25·V − 4.1875))` F/m² per the model —
   **0.04 fF/µm² at V = 0 V** (0.0375 fF/µm²), **1.11 fF/µm² at the V = 0.67 V
@@ -115,21 +120,23 @@ Split it evenly: 72 Ω slow-switching-limit (SSL) and 72 Ω for switch
 resistance and parasitics. The even split is an assumption.
 
 SSL output resistance of a doubler with total flying capacitance C_fly at
-clock f_sw: R_SSL = 1 / (f_sw · C_fly). So C_fly = 1 / (f_sw · 72 Ω), then
-divided by 0.9 for the low-capacitance corner.
+clock f_sw: R_SSL = 1 / (f_sw · C_fly). The minimum-corner flying
+capacitance required by the 72 Ω budget is 1 / (f_sw · 72 Ω).
 
-Ripple: each phase delivers charge to the output, so
-ΔV ≈ I / (2 · f_sw · C_out). With ΔV = 100 mV, I = 10 mA:
-C_out = 0.05 / f_sw, also divided by 0.9.
+Each phase delivers charge to the output. The ripple estimate
+ΔV ≈ I / (2 · f_sw · C_out) requires C_out = 0.05 / f_sw at the minimum
+corner for 10 mA and 100 mV ripple. Divide each required capacitance by
+0.9 to obtain the nominal installed capacitances below.
 
-| f_sw | C_fly (corner) | C_out (corner) | Capacitor area at 1.79 fF/µm² |
+| f_sw | C_fly (nominal) | C_out (nominal) | Plate area at 1.99 fF/µm² typical |
 |---|---|---|---|
 | 25 MHz | 617 pF | 2.22 nF | 1.43 mm² |
 | 50 MHz | 309 pF | 1.11 nF | 0.71 mm² |
 | 100 MHz | 154 pF | 0.56 nF | 0.36 mm² |
 
-(Computed as (C_fly,typ + C_out,typ) / 1.79 fF/µm², which equals sizing the
-typical values up by 1/0.9.)
+At 100 MHz the minimum corner requires 138.9 pF flying and 500 pF output.
+Their sum divided by 1.791 fF/µm² gives 0.357 mm². The same plates provide
+154.3 pF and 555.6 pF nominal at 1.99 fF/µm².
 
 Reading:
 - The original body's "hundreds of pF" holds for C_fly alone (154-617 pF), but
@@ -143,7 +150,8 @@ Reading:
   2.7 nC, negligible against a 10 µs budget at tens of mA; S4 is not the
   binding row.
 - The ripple row is the second lever: 200 mV ripple would halve C_out (to
-  250 pF typical, 278 pF corner) and bring total capacitor area at 100 MHz to
+  250 pF required at the minimum corner, 278 pF nominal) and bring total
+  capacitor area at 100 MHz to
   **0.217 mm²**. Against the 0.25 mm² draft row that leaves only **0.033 mm²**
   for switches, oscillator, drivers, clamp and routing — about 4× less headroom
   than the **0.14 mm²** left under S7 = 0.50 mm² at 100 mV ripple — so relaxing
@@ -232,9 +240,11 @@ follow-on record with simulated evidence.
 
 ## 5. Open items that this record cannot verify
 
-- Foundry `EF.*` rules for metal or MIM over the fuse body are not evaluated
-  by the open KLayout deck (see gf180-efuse-otp#60). Whether a reservoir cap or
-  any pump metal may sit over the OTP array is **unknown**. It is not assumed.
+- The native KLayout array report in gf180-efuse-otp lists 27 foundry
+  `EF.*` checks and zero violations on the drawn array. The report covers
+  that layout only. Whether the foundry permits pump metal or a MIM
+  reservoir over the fuse body remains open. The area budget takes no
+  credit for that placement. [Native array DRC report](https://github.com/2AMLogic/gf180-efuse-otp/blob/fa9bcc4b104b6fa2eebc3d481856b1b0615c7090/layout/drc-array.native.report.json) · [eFuse issue #60](https://github.com/2AMLogic/gf180-efuse-otp/issues/60)
 - The ≥ 100 MHz clock rate on 6 V devices at 2.97 V, and the 72 Ω switch
   budget, are assumptions for the topology record to test.
 - The 6.0 V rated terminal voltages need to be taken from the PDK documents
