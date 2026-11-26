@@ -1,0 +1,241 @@
+{
+  "schema_version": 1,
+  "kind": "generic",
+  "status": "pass",
+  "t1_item": 9,
+  "summary": "T1 item 9 (Testbenches shipped): 29/29 attestation checks passed (klt signoff --attest)",
+  "source": "signoff/item9.json",
+  "attestation": {
+    "producer": "klt signoff --attest",
+    "inventory_schema_version": 1,
+    "hash_algorithm": "sha256-raw-bytes",
+    "check_count": 29,
+    "passed_count": 29,
+    "checks": [
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "signoff/cold_start.py",
+        "passed": true,
+        "content_hash": "sha256:ef0439103769a3977a23a0b98812d1110b2e1b280b0de8fce7e59cf874fe5376"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/benches/dut_reference.spice",
+        "passed": true,
+        "content_hash": "sha256:4f0149d55c00caf489959b0948faa7a3b7ced79983ed88fc6a6fe172c14e9be1"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/benches/generate.py",
+        "passed": true,
+        "content_hash": "sha256:aa81957b0cf15c589233404d14b84c4be8d286c6bd63407441a1432f434b43b9"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/benches/single_point.py",
+        "passed": true,
+        "content_hash": "sha256:357a8be9307606d86e416d59646ecc5a1bdb11af3a2f6a1f1603af21089e82ac"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/cap-model/extract.py",
+        "passed": true,
+        "content_hash": "sha256:43d10eb4b6592b80209f60f553b800d361f8f77de5677a1ad2a20ae934f237c5"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/device-stress/testbench/netlist.spice",
+        "passed": true,
+        "content_hash": "sha256:61c7a6f7fccb5a3477516d6819266bf40c41f110b54f12b1a9068551cc94962d"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/device-stress/testbench/tb.json",
+        "passed": true,
+        "content_hash": "sha256:a82b0f79268745c7a0f7c3b9e42650c00f3b6a2cdfc236646edbf1f92907e7f3"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/__init__.py",
+        "passed": true,
+        "content_hash": "sha256:6a43ff22e6e6577f0259dff805a36eeb783e45c1dcffde474bca700358fe5484"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/cli.py",
+        "passed": true,
+        "content_hash": "sha256:76cf2d458717af1a32a65a5377b85df4b6f88bf5b5dd517199a4a4471b63e4d2"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/corners.py",
+        "passed": true,
+        "content_hash": "sha256:331040eca179f1d88b5ecf9e1c4384927442b04ceaf7b4ce7b4323f7ca0aa29d"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/evidence.py",
+        "passed": true,
+        "content_hash": "sha256:3c0ce2b782016b6ff53121929ad53b0217a7ca34ce93f01d329f2319d910e0d1"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/pdk.py",
+        "passed": true,
+        "content_hash": "sha256:f460d26bc0a069e5108ae836a684ba98c9965c5fea68afd7a30736482abae96b"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/pump_evidence.py",
+        "passed": true,
+        "content_hash": "sha256:9ef24fa042469b2e8a0eda2c8b207ed230f3f1cd48862b1c5760c57032884fab"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/report.py",
+        "passed": true,
+        "content_hash": "sha256:152068c2bee43f37a804c9f23263726725f7fec526a94a4fcdb3077bb6318331"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/runner.py",
+        "passed": true,
+        "content_hash": "sha256:6f798ba1f303facf8b76e57a5b341dc44e29b8499ac2e6bba85a4af98391ae41"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/simgate.py",
+        "passed": true,
+        "content_hash": "sha256:10415d0ed3d60e95b07fef563a91345afc0f8ea07f1d86dc949d55c765a8e241"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/strict_json.py",
+        "passed": true,
+        "content_hash": "sha256:ab79a0d94ab1f107be72384eb3e55add6dea996cc5a7c7b162985945af13c176"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/testbench.py",
+        "passed": true,
+        "content_hash": "sha256:bb3f3cd62822ddf031a9ddad404f70b97988bad8857316228bcc13818bde8219"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/harness/toolchain.py",
+        "passed": true,
+        "content_hash": "sha256:ef4a36b4b8c8d16e363bbe6c19915b3af6637b61f88f3f34bbfa8a0174add290"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/load-step/testbench/netlist.spice",
+        "passed": true,
+        "content_hash": "sha256:8ec3f62e573940ef88c39f9f48345f824d98efc9c8c955a09fe66654212ff2d2"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/load-step/testbench/tb.json",
+        "passed": true,
+        "content_hash": "sha256:87ebdf5e93aca803a243d1b9a59e4f4dcc7a1e4ff081710730c193f1e7c1382e"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/load/testbench/netlist.spice",
+        "passed": true,
+        "content_hash": "sha256:09c0124a5768fe3900023f51a6678b46fac63f0e0ec2550a443dcf0dcd16e8de"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/load/testbench/tb.json",
+        "passed": true,
+        "content_hash": "sha256:5922ddf23b13ec801992c72153a5d6c4a7833bf5ee6789531c605851936a363e"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/pdk.json",
+        "passed": true,
+        "content_hash": "sha256:10624b848e3b30719b2a3f0213eefec1b973f585dc1c64e79a73a6d212b902a8"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/startup/testbench/netlist.spice",
+        "passed": true,
+        "content_hash": "sha256:fafc656e5f92ca2af59dce4b5dfb3d1df50b89588f5cc0b3775573651e4a35c1"
+      },
+      {
+        "check": "present",
+        "role": "testbench",
+        "path": "sim/startup/testbench/tb.json",
+        "passed": true,
+        "content_hash": "sha256:bb14be8b1d29fb334fdb37997324a8d3791713dc02ce0bccf2064a540da93849"
+      },
+      {
+        "check": "command",
+        "role": "cold_start",
+        "argv": [
+          "python3",
+          "signoff/cold_start.py"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true
+      },
+      {
+        "check": "pin",
+        "role": "pdk",
+        "passed": true,
+        "value": {
+          "name": "gf180mcuD",
+          "revision": "f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7"
+        }
+      },
+      {
+        "check": "pin",
+        "role": "tools",
+        "passed": true,
+        "value": {
+          "klayout-tools": "0.9.2",
+          "ngspice": "47 (recorded model extraction); 45.2 also exercised by CI"
+        }
+      }
+    ]
+  },
+  "provenance": {
+    "klt_version": "0.9.2",
+    "klayout_version": null,
+    "pdk": null,
+    "deck": null,
+    "input": {
+      "path": {
+        "path": "signoff/item9.json",
+        "scope": "repo"
+      },
+      "content_hash": "sha256:9e8eff51efcd2a079063c0aa0bc884e629f00708e7c400d1ebf6c2b43708ca58"
+    }
+  }
+}
