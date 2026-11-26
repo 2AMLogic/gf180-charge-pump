@@ -1042,6 +1042,19 @@ def render_markdown(record: dict) -> str:
     return "\n".join(lines)
 
 
+def _json_record_value(value):
+    """Keep failed measurements representable in RFC 8259 companion records."""
+    if isinstance(value, float) and not math.isfinite(value):
+        if math.isnan(value):
+            return "NaN"
+        return "Infinity" if value > 0 else "-Infinity"
+    if isinstance(value, dict):
+        return {key: _json_record_value(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_record_value(item) for item in value]
+    return value
+
+
 def write_record(record: dict, experiment_dir: Path) -> Path:
     """Append-only write of a record as two files. Never overwrites.
 
@@ -1065,17 +1078,17 @@ def write_record(record: dict, experiment_dir: Path) -> Path:
             f"{clash} already exists; append-only evidence is never rewritten"
         )
     public = {k: v for k, v in record.items() if not k.startswith("_")}
+    text = render_markdown(record)
+    json_text = json.dumps(_json_record_value(public), indent=2, allow_nan=False) + "\n"
     # Exclusive create is the real protection: the exists() check above is
     # only a friendly early diagnostic and cannot stop a concurrent writer.
     try:
         with open(json_path, "x", encoding="utf-8") as fh:
-            json.dump(public, fh, indent=2)
-            fh.write("\n")
+            fh.write(json_text)
     except FileExistsError as exc:
         raise RecordExists(
             f"{json_path} already exists; append-only evidence is never rewritten"
         ) from exc
-    text = render_markdown(record)
     try:
         with open(path, "x", encoding="utf-8") as fh:
             fh.write(text)

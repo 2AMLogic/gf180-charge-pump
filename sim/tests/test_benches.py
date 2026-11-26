@@ -345,6 +345,8 @@ class WriteRecordFiles(unittest.TestCase):
             md = exp / "records" / f"{rid}.md"
             js = exp / "records" / f"{rid}.json"
             self.assertEqual(report.write_record(record, exp), md)
+            public = {key: value for key, value in record.items() if not key.startswith("_")}
+            self.assertEqual(js.read_text(), json.dumps(public, indent=2) + "\n")
             data = json.loads(js.read_text())
             self.assertEqual(data["record_id"], rid)
             # the Markdown bullet points readers at the full per-point list;
@@ -372,6 +374,34 @@ class WriteRecordFiles(unittest.TestCase):
             with self.assertRaises(report.RecordExists):
                 report.write_record(record, exp)
             self.assertEqual((md.read_bytes(), js.read_bytes()), before)
+
+    def test_render_failure_leaves_neither_record_file(self):
+        record = self._record("20261125-120000-abc1234")
+        with tempfile.TemporaryDirectory() as tmp:
+            exp = Path(tmp)
+            with patch.object(report, "render_markdown", side_effect=ValueError("render failed")):
+                with self.assertRaisesRegex(ValueError, "render failed"):
+                    report.write_record(record, exp)
+            self.assertFalse(list((exp / "records").glob("*")))
+
+    def test_nonfinite_measurements_survive_as_strict_json_strings(self):
+        record = self._record("20261125-120000-abc1234")
+        values = {"overflow": float("1e999"), "negative": -float("inf"),
+                  "undefined": float("nan"), "finite": -0.25}
+        record["points"][0].update(status="failed", measurements=values)
+
+        def reject_constant(token):
+            self.fail(f"bare non-finite JSON token: {token}")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = report.write_record(record, Path(tmp))
+            decoded = json.loads(path.with_suffix(".json").read_text(),
+                                 parse_constant=reject_constant)
+            point = decoded["points"][0]
+            self.assertEqual(point["status"], "failed")
+            self.assertEqual(point["measurements"], {"overflow": "Infinity",
+                             "negative": "-Infinity", "undefined": "NaN", "finite": -0.25})
+            self.assertIsInstance(record["points"][0]["measurements"]["overflow"], float)
 
     def test_existing_md_refuses_without_orphan_json(self):
         rid = "20260101-000002-testsha"

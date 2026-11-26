@@ -274,7 +274,7 @@ review needs. Private `_`-prefixed rendering keys (e.g. `_evidence_lines`)
 are not serialized. Both files are created exclusively and never
 overwritten; `records/<record-id>.md` remains the finished-record marker
 (`--supersedes` resolves it), and a new reservation refuses an id whose
-`.md`, `.json`, or netlist snapshot already exists.
+`.md`, `.json`, or netlist snapshot already exists. Failed points retain non-finite measurements as the JSON strings `"Infinity"`, `"-Infinity"` and `"NaN"`. Finite measurements remain JSON numbers.
 
 Every `run` / `selftest` invocation creates its **own** scratch workspace
 under the parent (atomically, with `tempfile.mkdtemp`) before it reserves a
