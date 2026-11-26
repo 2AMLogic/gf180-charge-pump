@@ -1,5 +1,6 @@
 import copy, json, shutil, subprocess, sys, tempfile, unittest
 from pathlib import Path
+from unittest.mock import patch
 
 SIM = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SIM))
@@ -130,6 +131,16 @@ class StressNegativeControl(unittest.TestCase):
         dut = (SIM / "benches" / "dut_reference.spice").read_text()
         inst = set(re.findall(r"(?m)^(x\S+)\s.*\b(?:nfet|pfet)_06v0\b", dut))
         self.assertEqual(inst, {d[0] for d in generate.DEVICES})
+
+    def test_load_step_uses_the_configured_device_nodes(self):
+        devices = [("xout", "xdut.switched", "xdut.gate", "vout", "vout")]
+        with patch.object(generate, "DEVICES", devices):
+            _, bench = generate.load_step()
+        for name, expression in bench["measure"].items():
+            if not name.startswith("stress_"):
+                self.assertNotIn("xdut.", expression, name)
+        self.assertEqual(bench["measure"]["stress_xout_vds_v"],
+                         "maximum(abs(v(xdut.switched)-v(vout)))")
 
     def test_time_base_follows_start_limit(self):
         self.assertGreaterEqual(generate.T_SETTLE_S, 2 * generate.START_MAX_S)

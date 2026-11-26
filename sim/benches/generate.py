@@ -41,7 +41,6 @@ DUT = (HERE / "dut_reference.spice").read_text()
 NOMINAL_V = 3.3
 TOL = 0.10
 TEMPS = [-40.0, 25.0, 125.0]
-CORNERS = ["tt", "ff", "ss", "fs", "sf"]
 VOUT_NOM, VOUT_TOL = 5.0, 0.10
 VOUT_MIN = VOUT_NOM * (1 - VOUT_TOL)
 ILOAD_MA = 10
@@ -182,21 +181,19 @@ def load_step():
         f"vout_step_to_{ILOAD_MA}ma_post_mean_v": w_mean("v(vout)", us(t_ramped + T_POST_S / 2), us(t_end)),
         f"vout_step_to_{ILOAD_MA}ma_post_min_v": w_min("v(vout)", us(t_ramped), us(t_end)),
         f"vout_step_to_{ILOAD_MA}ma_post_max_v": w_max("v(vout)", us(t_ramped), us(t_end)),
-        "vds_peak_pmos_during_step_v": w_max("abs(v(xdut.a)-v(vout))", us(tstep), us(t_end)),
     }
     checks = {
         f"vout_step_to_{ILOAD_MA}ma_post_min_v": {"min": VOUT_MIN},
         f"vout_step_to_{ILOAD_MA}ma_post_max_v": {"max": VOUT_NOM * (1 + VOUT_TOL)},
-        "vds_peak_pmos_during_step_v": {"max": RATING_V},
     }
     # Full stress coverage over the whole step transient (startup + step edge).
     s_measure, s_checks = stress()
     measure.update(s_measure)
     checks.update(s_checks)
     return stim, dict(
-        description=f"Vout after a {T_STEP_S * 1e6:g} us step to {ILOAD_MA} mA, min over the transient and settled "
-                    "mean; peak Vds of the output devices during the step; every device terminal pair against "
-                    "its rating over the whole transient.",
+        description=f"Vout min, max and settled mean after a {T_STEP_S * 1e6:g} us resistive load ramp "
+                    f"({ILOAD_MA} mA at {VOUT_MIN:g} V). Per-device terminal stress is measured over "
+                    "the whole transient, including startup and the load ramp.",
         claim=f"Vout never leaves {VOUT_NOM}V+/-{VOUT_TOL*100:g}% through a step to {ILOAD_MA} mA.",
         analyses=[f"tran 1n {us(t_end)} 0 {TMAX}"], measure=measure, checks=checks)
 
