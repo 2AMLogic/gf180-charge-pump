@@ -6,20 +6,17 @@ from hashlib import sha256
 import json
 import math
 from pathlib import Path
-import re
-import shutil
-import subprocess
 import tempfile
 
 from screen import (
-    HERE,
     MODEL_SHA,
     ORIGINAL,
     REGULATORS,
     Point,
     header,
     integrated,
-    pdk,
+    preflight,
+    read_measurements,
     replace_once,
     run_spice,
 )
@@ -113,23 +110,6 @@ def measure(point, models, ngspice, log_dir):
     return {"point": point.key(), "measurements": observed}
 
 
-def read_measurements(output, required):
-    values = {}
-    for key, value in re.findall(
-        r"(?m)^([a-z][a-z0-9_]*)[ \t]*=[ \t]*([-+.Ee0-9]+)", output
-    ):
-        if key in required:
-            if key in values:
-                raise ValueError(f"Duplicate ngspice measurement {key}")
-            values[key] = float(value)
-    missing = required - values.keys()
-    if missing or not all(math.isfinite(v) for v in values.values()):
-        raise ValueError(
-            f"Missing or nonfinite ngspice measurements: {sorted(missing)}"
-        )
-    return values
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--jobs", type=int, default=1)
@@ -141,20 +121,7 @@ def main():
     args = parser.parse_args()
     if args.log_dir:
         args.log_dir.mkdir(parents=True, exist_ok=True)
-    ngspice = shutil.which("ngspice")
-    if (
-        args.jobs < 1
-        or not ngspice
-        or not re.search(
-            r"ngspice-46\b", subprocess.check_output([ngspice, "--version"], text=True)
-        )
-    ):
-        parser.error("Use ngspice 46 and a positive worker count")
-    models = pdk.find_pdk(HERE.parent).model_lib.parent
-    if {
-        n: sha256((models / n).read_bytes()).hexdigest() for n in MODEL_SHA
-    } != MODEL_SHA:
-        parser.error("GF180D model hashes differ from the integrated screen")
+    models, ngspice = preflight(parser, args.jobs)
     with ThreadPoolExecutor(max_workers=args.jobs) as pool:
         rows = list(
             pool.map(

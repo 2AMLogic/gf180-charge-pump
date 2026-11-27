@@ -146,6 +146,26 @@ def run_spice(deck, folder, ngspice):
     return text
 
 
+def read_measurements(output, required, optional=frozenset()):
+    values = {}
+    for key, value in re.findall(
+        r"(?m)^([a-z][a-z0-9_]*)[ \t]*=[ \t]*([-+.Ee0-9]+)", output
+    ):
+        if key in required or key in optional:
+            if key in values:
+                raise ValueError(f"Duplicate ngspice measurement {key}")
+            values[key] = float(value)
+    missing = required - values.keys()
+    if missing or not all(math.isfinite(v) for v in values.values()):
+        raise ValueError(
+            f"Missing or nonfinite ngspice measurements: {sorted(missing)}\n"
+            f"{output[-700:]}"
+        )
+    for key in sorted(optional - values.keys()):
+        values[key] = None
+    return values
+
+
 def header(point, models):
     return "\n".join(
         [
@@ -267,12 +287,14 @@ def transient(point, models, ngspice, step_ns=0.2, ramp=False, variant=None):
             name = key + "_" + label
             commands.append(f"meas tran {name} avg sample from={start}u to={end}u")
             required.add(name)
+    # A fully completed transient with insufficient clock crossings is a measured failure.
+    optional = set()
     for net in ("clk", "clkb"):
         name = "twenty_" + net
         commands.append(
             f"meas tran {name} trig v({net}) val=1.3 rise=2 td=20u targ v({net}) val=1.3 rise=22 td=20u"
         )
-        required.add(name)
+        optional.add(name)
     for i, (a, b) in enumerate(pairs):
         commands.append(f"let delta_v = {voltage(a)} - {voltage(b)}")
         for op in ("min", "max"):
@@ -286,23 +308,15 @@ def transient(point, models, ngspice, step_ns=0.2, ramp=False, variant=None):
             Path(tmp),
             ngspice,
         )
-    result = {
-        k: float(v)
-        for k, v in re.findall(r"(?m)^([a-z][a-z0-9_]+)\s+=\s+([-+.Ee0-9]+)", output)
-        if k in required
-    }
-    missing = required - result.keys()
-    if (
-        missing - {"twenty_clk", "twenty_clkb"}
-        or not all(math.isfinite(v) for v in result.values())
-        or not math.isclose(result["end_time"], 24e-6)
-    ):
+    try:
+        result = read_measurements(output, required, optional)
+    except ValueError as exc:
+        raise ValueError(f"Incomplete {point.key()} transient: {exc}") from exc
+    if not math.isclose(result["end_time"], 24e-6):
         raise ValueError(
-            f"Incomplete {point.key()} transient, missing {required - result.keys()}: {output[-700:]}"
+            f"Incomplete {point.key()} transient, end_time {result['end_time']}\n"
+            f"{output[-700:]}"
         )
-    # A fully completed transient with insufficient clock crossings is a measured failure.
-    for name in missing:
-        result[name] = None
     extrema = {
         pair: tuple(result.pop(f"pair{i}_{op}") for op in ("min", "max"))
         for i, pair in enumerate(pairs)
@@ -317,17 +331,13 @@ def transient(point, models, ngspice, step_ns=0.2, ramp=False, variant=None):
     }
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("suite", choices=("pvt", "controls", "smoke", "isolation"))
-    parser.add_argument("--jobs", type=int, default=1)
-    args = parser.parse_args()
-    device = shutil.which("ngspice")
+def preflight(parser, jobs):
+    ngspice = shutil.which("ngspice")
     if (
-        args.jobs < 1
-        or not device
+        jobs < 1
+        or not ngspice
         or not re.search(
-            r"ngspice-46\b", subprocess.check_output([device, "--version"], text=True)
+            r"ngspice-46\b", subprocess.check_output([ngspice, "--version"], text=True)
         )
     ):
         parser.error("Use ngspice 46 and a positive worker count")
@@ -336,6 +346,15 @@ def main():
         n: sha256((models / n).read_bytes()).hexdigest() for n in MODEL_SHA
     } != MODEL_SHA:
         parser.error("GF180D model hashes differ from the pinned parent")
+    return models, ngspice
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("suite", choices=("pvt", "controls", "smoke", "isolation"))
+    parser.add_argument("--jobs", type=int, default=1)
+    args = parser.parse_args()
+    models, device = preflight(parser, args.jobs)
     cases = [(p, 0.2, False) for p in points()]
     if args.suite == "smoke":
         cases = [
