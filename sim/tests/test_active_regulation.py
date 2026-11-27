@@ -1,15 +1,21 @@
 """Validate circuit-bound regulator, shunt-port and native capacitor-coupon records."""
 
+from functools import partial
 import gzip
 import hashlib
+import io
 import json
 from pathlib import Path
 import runpy
 import sys
-from unittest.mock import patch
+import tempfile
+from unittest.mock import Mock, patch
 import unittest
 
 HERE = Path(__file__).resolve().parents[1] / "active-regulation"
+TOOLS_NGSPICE = "/tools/ngspice"
+BANNER_46 = "** ngspice-46 : Circuit level simulation program\n"
+BANNER_47 = "** ngspice-47 : Circuit level simulation program\n"
 
 
 def record(name):
@@ -18,6 +24,22 @@ def record(name):
 
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def echo_spice(deck, folder, ngspice, omit=()):
+    """Print each measurement a deck's control block requests, as ngspice does."""
+    output = []
+    for words in (line.split() for line in deck.split("\n.control\n")[1].splitlines()):
+        if not words:
+            continue
+        if words[0] == "tran":
+            end_time = float(words[2].rstrip("u")) * 1e-6
+        elif words[0] == "meas" and words[2] not in omit:
+            output.append(f"{words[2]:<20} =  1.0e+00")
+        elif words[0] == "print":
+            value = f"{end_time:.10e}" if words[1] == "end_time" else "1.0e+00"
+            output.append(f"{words[1]} = {value}")
+    return "\n".join(output)
 
 
 class ActiveRegulation(unittest.TestCase):
@@ -34,6 +56,71 @@ class ActiveRegulation(unittest.TestCase):
             parse("end_time = 1.19e-4\n", required)
         with self.assertRaises(ValueError):
             parse(rows + rows, required)
+
+    def test_shared_parser_leaves_only_missing_clock_periods_unset(self):
+        producer = runpy.run_path(str(HERE / "screen.py"))
+        parse = producer["read_measurements"]
+        periods = {"twenty_clk", "twenty_clkb"}
+        rows = (
+            "end_time = 2.4000000000e-05\n"
+            "before_out_min       =  4.97370e+00 at=  1.92000e-06\n"
+            "twenty_clk           =  1.9999900000e-08\n"
+            "twenty_clkb          =  2.0000100000e-08\n"
+            "pair0_min = -3.30010e+00\n"
+            "pair0_max =  3.30010e+00\n"
+        )
+        required = {"end_time", "before_out_min", "pair0_min"}
+        self.assertEqual(
+            parse(rows, required, periods),
+            {
+                "end_time": 24e-6,
+                "before_out_min": 4.9737,
+                "pair0_min": -3.3001,
+                "twenty_clk": 1.99999e-8,
+                "twenty_clkb": 2.00001e-8,
+            },
+        )
+        self.assertEqual(
+            parse("end_time = 2.4000000000e-05\n", {"end_time"}, periods),
+            {"end_time": 24e-6, "twenty_clk": None, "twenty_clkb": None},
+        )
+        with self.assertRaises(ValueError):
+            parse(rows, required | {"all_out_max"}, periods)
+        with self.assertRaises(ValueError):
+            parse(rows + "twenty_clk           =  2.1e-08\n", required, periods)
+
+    def test_transient_records_failed_clock_periods_as_unset(self):
+        producer = runpy.run_path(str(HERE / "screen.py"))
+        transient = producer["transient"]
+        point = producer["Point"]("typical", "typical", "typical", "typical", 25, 3.3)
+        periods = ("twenty_clk", "twenty_clkb")
+        with patch.dict(
+            transient.__globals__, {"run_spice": partial(echo_spice, omit=periods)}
+        ):
+            row = transient(point, Path("/pdk"), "/ngspice")
+        self.assertEqual(row["point"], point.key())
+        self.assertEqual(row["measurements"]["end_time"], 24e-6)
+        self.assertEqual(row["measurements"]["before_out_min"], 1.0)
+        self.assertEqual([row["measurements"][k] for k in periods], [None, None])
+        with patch.dict(transient.__globals__, {"run_spice": echo_spice}):
+            row = transient(point, Path("/pdk"), "/ngspice")
+        self.assertEqual([row["measurements"][k] for k in periods], [1.0, 1.0])
+        with patch.dict(transient.__globals__, {"run_spice": lambda *args: ""}):
+            with self.assertRaises(ValueError) as failure:
+                transient(point, Path("/pdk"), "/ngspice")
+        self.assertIn(f"Incomplete {point.key()} transient", str(failure.exception))
+
+    def test_shunt_port_probes_parse_through_the_shared_reader(self):
+        with patch.object(sys, "path", [str(HERE), *sys.path]):
+            bench = runpy.run_path(str(HERE / "impedance.py"))
+        point = bench["screen"].Point(
+            "typical", "typical", "typical", "typical", 25, 3.3
+        )
+        with patch.object(bench["screen"], "run_spice", echo_spice):
+            result = bench["measure"](point, Path("/pdk"), "/ngspice")
+        self.assertEqual(set(result["bias"]), {"5", "15", "30"})
+        self.assertEqual(result["bias"]["15"]["vout_v"], 1.0)
+        self.assertEqual(result["step"]["with_reservoir"]["end_time"], 1e-6)
 
     def test_host_pulse_record_matches_signed_measurements(self):
         with patch.object(sys, "path", [str(HERE), *sys.path]):
@@ -187,3 +274,85 @@ class ActiveRegulation(unittest.TestCase):
             reports["all"]["rule_counts"],
             dict.fromkeys(("DCF.1b", "M1.4", "M2.4", "M3.4", "PL.8"), 1),
         )
+
+    def test_preflight_rejects_bad_arguments_before_looking_up_the_pdk(self):
+        producer = runpy.run_path(str(HERE / "screen.py"))
+        parser = Mock()
+        parser.error.side_effect = SystemExit
+        with (
+            patch("shutil.which", return_value=TOOLS_NGSPICE),
+            patch("subprocess.check_output", return_value=BANNER_46),
+            patch.object(producer["pdk"], "find_pdk") as find_pdk,
+            self.assertRaises(SystemExit),
+        ):
+            producer["preflight"](parser, 0)
+        find_pdk.assert_not_called()
+        parser.error.assert_called_once_with(
+            "Use ngspice 46 and a positive worker count"
+        )
+
+    def test_preflight_pins_ngspice_46_and_the_model_hashes(self):
+        producer = runpy.run_path(str(HERE / "screen.py"))
+        preflight = producer["preflight"]
+        parser = Mock()
+        parser.error.side_effect = SystemExit
+        with tempfile.TemporaryDirectory() as temp:
+            models = Path(temp)
+            hashes = {}
+            for name in producer["MODEL_SHA"]:
+                (models / name).write_text(name)
+                hashes[name] = digest(models / name)
+            install = Mock(model_lib=models / "sm141064.ngspice")
+            with (
+                patch.object(producer["pdk"], "find_pdk", return_value=install),
+                patch("shutil.which", return_value=TOOLS_NGSPICE),
+                patch.dict(preflight.__globals__, {"MODEL_SHA": hashes}),
+            ):
+                with patch("subprocess.check_output", return_value=BANNER_46):
+                    self.assertEqual(preflight(Mock(), 2), (models, TOOLS_NGSPICE))
+                for which, banner in ((None, BANNER_46), (TOOLS_NGSPICE, BANNER_47)):
+                    with self.subTest(which=which, banner=banner):
+                        with (
+                            patch("shutil.which", return_value=which),
+                            patch("subprocess.check_output", return_value=banner),
+                            self.assertRaises(SystemExit),
+                        ):
+                            preflight(parser, 1)
+                        parser.error.assert_called_with(
+                            "Use ngspice 46 and a positive worker count"
+                        )
+                (models / sorted(hashes)[0]).write_text("drifted")
+                with (
+                    patch("subprocess.check_output", return_value=BANNER_46),
+                    self.assertRaises(SystemExit),
+                ):
+                    preflight(parser, 1)
+                parser.error.assert_called_with(
+                    "GF180D model hashes differ from the pinned parent"
+                )
+
+    def test_runners_reject_bad_arguments_before_looking_up_the_pdk(self):
+        pdk = runpy.run_path(str(HERE / "screen.py"))["pdk"]
+        for runner, arguments in (
+            ("screen.py", ["smoke", "--jobs", "0"]),
+            ("host_pulses.py", ["--jobs", "0"]),
+            ("impedance.py", ["--jobs", "0"]),
+        ):
+            with self.subTest(runner=runner):
+                with patch.object(sys, "path", [str(HERE), *sys.path]):
+                    main = runpy.run_path(str(HERE / runner))["main"]
+                usage = io.StringIO()
+                with (
+                    patch("shutil.which", return_value=TOOLS_NGSPICE),
+                    patch("subprocess.check_output", return_value=BANNER_46),
+                    patch.object(
+                        pdk, "find_pdk", side_effect=AssertionError("PDK looked up")
+                    ),
+                    patch.object(sys, "argv", [runner, *arguments]),
+                    patch.object(sys, "stderr", usage),
+                    self.assertRaises(SystemExit),
+                ):
+                    main()
+                self.assertIn(
+                    "Use ngspice 46 and a positive worker count", usage.getvalue()
+                )

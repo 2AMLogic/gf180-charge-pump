@@ -6,9 +6,6 @@ from hashlib import sha256
 import json
 import math
 from pathlib import Path
-import re
-import shutil
-import subprocess
 import tempfile
 
 import screen
@@ -44,7 +41,9 @@ xsh vin ref out regshunt
                 + "\n".join(commands)
                 + "\nquit\n.endc\n.end\n"
             )
-            data = parse(screen.run_spice(deck, path, ngspice), {"operating_v", *names})
+            data = screen.read_measurements(
+                screen.run_spice(deck, path, ngspice), {"operating_v", *names}
+            )
             result["bias"][str(current)] = {
                 "vout_v": data["operating_v"],
                 "ac_ohm": {str(int(f)): data[k] for k, f in names.items()},
@@ -74,7 +73,7 @@ quit
 .end
 """
             )
-            data = parse(
+            data = screen.read_measurements(
                 screen.run_spice(deck, path, ngspice),
                 {"end_time", "baseline_v", "peak_v", "valley_v", "hold_v"},
             )
@@ -88,37 +87,11 @@ quit
     return result
 
 
-def parse(text, names):
-    result = {
-        k: float(v)
-        for k, v in re.findall(r"(?m)^([a-z][a-z0-9_]+)\s+=\s+([-+Ee0-9.]+)", text)
-        if k in names
-    }
-    if set(result) != names or any(not math.isfinite(v) for v in result.values()):
-        raise ValueError(
-            f"Missing or invalid shunt-port probe: {names - result.keys()}\n{text[-700:]}"
-        )
-    return result
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--jobs", type=int, default=1)
     args = parser.parse_args()
-    models = screen.pdk.find_pdk(screen.HERE.parent).model_lib.parent
-    ngspice = shutil.which("ngspice")
-    if (
-        args.jobs < 1
-        or not ngspice
-        or not re.search(
-            r"ngspice-46\b", subprocess.check_output([ngspice, "--version"], text=True)
-        )
-    ):
-        parser.error("Use ngspice 46 and a positive worker count")
-    if {
-        n: sha256((models / n).read_bytes()).hexdigest() for n in screen.MODEL_SHA
-    } != screen.MODEL_SHA:
-        parser.error("GF180D model hashes differ from the pinned parent")
+    models, ngspice = screen.preflight(parser, args.jobs)
     points = [
         p
         for p in screen.points()
