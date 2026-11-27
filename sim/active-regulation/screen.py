@@ -161,7 +161,9 @@ def read_measurements(output, required, optional=frozenset()):
             f"Missing or nonfinite ngspice measurements: {sorted(missing)}\n"
             f"{output[-700:]}"
         )
-    return {key: values.get(key) for key in required | optional}
+    for key in sorted(optional - values.keys()):
+        values[key] = None
+    return values
 
 
 def header(point, models):

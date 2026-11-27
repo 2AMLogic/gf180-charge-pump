@@ -71,18 +71,22 @@ class ActiveRegulation(unittest.TestCase):
         )
         required = {"end_time", "before_out_min", "pair0_min"}
         self.assertEqual(
-            parse(rows, required, periods),
-            {
-                "end_time": 24e-6,
-                "before_out_min": 4.9737,
-                "pair0_min": -3.3001,
-                "twenty_clk": 1.99999e-8,
-                "twenty_clkb": 2.00001e-8,
-            },
+            list(parse(rows, required, periods).items()),
+            [
+                ("end_time", 24e-6),
+                ("before_out_min", 4.9737),
+                ("twenty_clk", 1.99999e-8),
+                ("twenty_clkb", 2.00001e-8),
+                ("pair0_min", -3.3001),
+            ],
         )
         self.assertEqual(
-            parse("end_time = 2.4000000000e-05\n", {"end_time"}, periods),
-            {"end_time": 24e-6, "twenty_clk": None, "twenty_clkb": None},
+            list(parse("end_time = 2.4000000000e-05\n", {"end_time"}, periods).items()),
+            [
+                ("end_time", 24e-6),
+                ("twenty_clk", None),
+                ("twenty_clkb", None),
+            ],
         )
         with self.assertRaises(ValueError):
             parse(rows, required | {"all_out_max"}, periods)
@@ -94,16 +98,19 @@ class ActiveRegulation(unittest.TestCase):
         transient = producer["transient"]
         point = producer["Point"]("typical", "typical", "typical", "typical", 25, 3.3)
         periods = ("twenty_clk", "twenty_clkb")
+        expected_keys = list(record("smoke")["records"][0]["measurements"])
         with patch.dict(
             transient.__globals__, {"run_spice": partial(echo_spice, omit=periods)}
         ):
             row = transient(point, Path("/pdk"), "/ngspice")
         self.assertEqual(row["point"], point.key())
+        self.assertEqual(list(row["measurements"]), expected_keys)
         self.assertEqual(row["measurements"]["end_time"], 24e-6)
         self.assertEqual(row["measurements"]["before_out_min"], 1.0)
         self.assertEqual([row["measurements"][k] for k in periods], [None, None])
         with patch.dict(transient.__globals__, {"run_spice": echo_spice}):
             row = transient(point, Path("/pdk"), "/ngspice")
+        self.assertEqual(list(row["measurements"]), expected_keys)
         self.assertEqual([row["measurements"][k] for k in periods], [1.0, 1.0])
         with patch.dict(transient.__globals__, {"run_spice": lambda *args: ""}):
             with self.assertRaises(ValueError) as failure:
@@ -120,6 +127,10 @@ class ActiveRegulation(unittest.TestCase):
             result = bench["measure"](point, Path("/pdk"), "/ngspice")
         self.assertEqual(set(result["bias"]), {"5", "15", "30"})
         self.assertEqual(result["bias"]["15"]["vout_v"], 1.0)
+        self.assertEqual(
+            list(result["step"]["with_reservoir"]),
+            list(record("impedance")["records"][0]["step"]["with_reservoir"]),
+        )
         self.assertEqual(result["step"]["with_reservoir"]["end_time"], 1e-6)
 
     def test_host_pulse_record_matches_signed_measurements(self):
