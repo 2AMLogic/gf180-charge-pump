@@ -109,6 +109,32 @@ def transient_setup(case, models, long_run, gear, shunt_ohms=1):
     ]
 
 
+def run_spice(lines, ngspice, label, filename="bench.cir"):
+    with tempfile.TemporaryDirectory() as workspace:
+        deck = Path(workspace) / filename
+        deck.write_text("\n".join(lines) + "\n")
+        run = subprocess.run([ngspice, "-b", str(deck)], capture_output=True, text=True)
+    output = run.stdout + "\n" + run.stderr
+    if run.returncode or "timestep too small" in output.lower():
+        raise ValueError(f"Incomplete {label}:\n{output[-1000:]}")
+    return output
+
+
+def read_measurements(output, required):
+    values = {}
+    for key, value in re.findall(r"(?m)^([a-z_0-9]+)[ \t]*=[ \t]*([-+0-9.eE]+)", output):
+        if key in required:
+            if key in values:
+                raise ValueError(f"Duplicate ngspice measurement {key}")
+            values[key] = float(value)
+    unusable = sorted(required - values.keys()) + sorted(
+        key for key, value in values.items() if not math.isfinite(value)
+    )
+    if unusable:
+        raise ValueError(f"Missing or non-finite ngspice measurements {unusable}:\n{output[-700:]}")
+    return values
+
+
 def simulate(case, models, ngspice, long_run, gear=False):
     mos, mim, temp, vin, side, clamp, step = case
     driver = DRIVER_V[vin]
@@ -126,20 +152,13 @@ def simulate(case, models, ngspice, long_run, gear=False):
         *(f".meas tran {name} {expr}" for name, expr in values.items()),
         ".end",
     ]
-    with tempfile.TemporaryDirectory() as workspace:
-        deck = Path(workspace) / "screen.cir"
-        deck.write_text("\n".join(lines) + "\n")
-        run = subprocess.run([ngspice, "-b", str(deck)], capture_output=True, text=True, check=True)
+    output = run_spice(lines, ngspice, f"measurements for {case}", "screen.cir")
     # Do not let a missing measure or truncated transient become a passing corner.
-    observed = dict(re.findall(r"(?m)^([a-z_0-9]+)\s+=\s+([-+0-9.eE]+)", run.stdout))
-    missing = set(values) - observed.keys()
-    if missing or "timestep too small" in (run.stdout + run.stderr).lower():
-        raise ValueError(
-            f"Incomplete measurements for {case}: {sorted(missing)}\n{run.stderr[-1000:]}"
-        )
-    result = {name: float(observed[name]) for name in values}
-    if not all(math.isfinite(x) for x in result.values()):
-        raise ValueError(f"Non-finite measurements for {case}")
+    try:
+        observed = read_measurements(output, values.keys())
+    except ValueError as exc:
+        raise ValueError(f"Incomplete measurements for {case}: {exc}") from exc
+    result = {name: observed[name] for name in values}
     return {
         "mos": mos,
         "mim": mim,
@@ -177,16 +196,13 @@ def capacitance(models, ngspice):
         for name in cells:
             deck.extend([f"let {name}_pf = -imag(i(v{name}))/(2*pi*1k)/1p", f"print {name}_pf"])
         deck.extend(["quit", ".endc", ".end"])
-        with tempfile.TemporaryDirectory() as workspace:
-            path = Path(workspace) / "caps.cir"
-            path.write_text("\n".join(deck) + "\n")
-            text = subprocess.check_output(
-                [ngspice, "-b", str(path)], text=True, stderr=subprocess.STDOUT
-            )
-        values = {n: float(x) for n, x in re.findall(r"(?m)^(x[a-z0-9]+)_pf = ([-+0-9.eE]+)", text)}
-        if set(values) != set(cells) or not all(
-            math.isfinite(v) and v > 0 for v in values.values()
-        ):
+        text = run_spice(deck, ngspice, f"AC capacitor measurements at {mim}", "caps.cir")
+        try:
+            printed = read_measurements(text, {f"{name}_pf" for name in cells})
+        except ValueError as exc:
+            raise ValueError(f"Missing AC capacitor measurements at {mim}: {exc}") from exc
+        values = {name: printed[f"{name}_pf"] for name in cells}
+        if not all(v > 0 for v in values.values()):
             raise ValueError(f"Missing AC capacitor measurements at {mim}")
         for name, count in (("xca", 56), ("xcb", 56), ("xco", 109)):
             if not math.isclose(values[name] / values["xunit"], count, rel_tol=1e-5):
@@ -195,12 +211,8 @@ def capacitance(models, ngspice):
     return results
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("suite", choices=("clock", "load", "controls", "gear", "capacitance"))
-    parser.add_argument("--jobs", type=int, default=1)
-    args = parser.parse_args()
-    if args.jobs < 1:
+def preflight(parser, jobs):
+    if jobs < 1:
         parser.error("--jobs must be positive")
     tool = shutil.which("ngspice")
     if not tool or not re.search(
@@ -210,6 +222,15 @@ def main():
     models = pdk.find_pdk(HERE.parent).model_lib.parent
     if {name: digest(models / name) for name in MODEL_SHA} != MODEL_SHA:
         parser.error("The installed GF180 models differ from open_pdks f6eeac7d")
+    return models, tool
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("suite", choices=("clock", "load", "controls", "gear", "capacitance"))
+    parser.add_argument("--jobs", type=int, default=1)
+    args = parser.parse_args()
+    models, tool = preflight(parser, args.jobs)
     cases = list(points())
     if args.suite == "controls":
         cases = SENSITIVITY
