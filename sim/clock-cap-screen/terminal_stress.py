@@ -5,11 +5,6 @@ from concurrent.futures import ThreadPoolExecutor
 import itertools
 import json
 import math
-from pathlib import Path
-import re
-import shutil
-import subprocess
-import tempfile
 
 import screen
 
@@ -113,18 +108,16 @@ def observe(job, models, ngspice, devices):
             ".end",
         ]
     )
-    with tempfile.TemporaryDirectory() as tmp:
-        path = Path(tmp) / "stress.cir"
-        path.write_text("\n".join(lines) + "\n")
-        run = subprocess.run([ngspice, "-b", str(path)], capture_output=True, text=True)
-    if run.returncode or "timestep too small" in (run.stdout + run.stderr).lower():
-        raise ValueError(f"Incomplete stress transient {job}: {run.stderr[-500:]}")
-    observed = {
-        k: float(v)
-        for k, v in re.findall(r"(?m)^([a-z_0-9]+)\s+=\s+([-+0-9.eE]+)", run.stdout)
+    output = screen.run_spice(lines, ngspice, f"stress transient {job}", "stress.cir")
+    required = {"full_t", "release_peak", "hold_min"} | {
+        f"t_{a}_{b}_{s}" for a, b in pairs if a != b for s in ("lo", "hi")
     }
-    if abs(observed.get("full_t", 0) - 24e-6) > 1e-10:
-        raise ValueError(f"Truncated transient {job}: {run.stdout[-700:]}")
+    try:
+        observed = screen.read_measurements(output, required)
+    except ValueError as exc:
+        raise ValueError(f"Incomplete stress transient {job}: {exc}") from exc
+    if abs(observed["full_t"] - 24e-6) > 1e-10:
+        raise ValueError(f"Truncated transient {job}: {output[-700:]}")
     extremes = {}
     for a, b in pairs:
         extrema = (
@@ -155,18 +148,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--jobs", type=int, default=1)
     args = parser.parse_args()
-    if args.jobs < 1:
-        parser.error("--jobs must be positive")
-    models = screen.pdk.find_pdk(screen.HERE.parent).model_lib.parent
-    sim = shutil.which("ngspice")
-    if not sim or "ngspice-46 " not in subprocess.check_output(
-        [sim, "--version"], text=True
-    ):
-        parser.error("ngspice 46 is required")
-    if {
-        name: screen.digest(models / name) for name in screen.MODEL_SHA
-    } != screen.MODEL_SHA:
-        parser.error("Unexpected GF180 model digest")
+    models, sim = screen.preflight(parser, args.jobs)
     devices = differences(terminals())
     with ThreadPoolExecutor(args.jobs) as workers:
         rows = list(
