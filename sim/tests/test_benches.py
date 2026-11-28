@@ -1,5 +1,6 @@
 import copy, json, shutil, subprocess, sys, tempfile, unittest
 from pathlib import Path
+from unittest.mock import patch
 
 SIM = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SIM))
@@ -131,6 +132,16 @@ class StressNegativeControl(unittest.TestCase):
         inst = set(re.findall(r"(?m)^(x\S+)\s.*\b(?:nfet|pfet)_06v0\b", dut))
         self.assertEqual(inst, {d[0] for d in generate.DEVICES})
 
+    def test_load_step_uses_the_configured_device_nodes(self):
+        devices = [("xout", "xdut.switched", "xdut.gate", "vout", "vout")]
+        with patch.object(generate, "DEVICES", devices):
+            _, bench = generate.load_step()
+        for name, expression in bench["measure"].items():
+            if not name.startswith("stress_"):
+                self.assertNotIn("xdut.", expression, name)
+        self.assertEqual(bench["measure"]["stress_xout_vds_v"],
+                         "maximum(abs(v(xdut.switched)-v(vout)))")
+
     def test_time_base_follows_start_limit(self):
         self.assertGreaterEqual(generate.T_SETTLE_S, 2 * generate.START_MAX_S)
         for slug in ("device-stress", "load"):
@@ -163,6 +174,40 @@ class StressNegativeControl(unittest.TestCase):
         self.assertTrue(r["violations"])
         bad = report.analyze_results(tb, [res.point], [res], allow_unswept_axes=True)
         self.assertTrue(bad["failures"])
+
+
+class LoadStepVoltage(unittest.TestCase):
+    @requires_sim(_can_simulate)
+    def test_ramp_excursions_and_endpoints_fail_their_bounds(self):
+        cases = [
+            ("interior", [(0.4, 5), (0.5, 4.1), (0.6, 5.9), (0.7, 5)], 4.1, 5.9),
+            ("endpoints", [(-0.1, 5), (0, 4), (0.1, 5), (0.9, 5), (1, 6), (1.1, 5)], 4, 6),
+        ]
+        with tempfile.TemporaryDirectory() as temp:
+            bench = Path(temp)
+            shutil.copyfile(SIM / "load-step/testbench/tb.json", bench / "tb.json")
+            for name, points, minimum, maximum in cases:
+                with self.subTest(name=name):
+                    waveform = " ".join(
+                        f"{generate.us(generate.T_SETTLE_S + fraction * generate.T_STEP_S)} {volts:g}"
+                        for fraction, volts in points)
+                    # Run the production manifest on a known VOUT waveform.
+                    (bench / "netlist.spice").write_text(
+                        f"vforced vout 0 pwl(0 5 {waveform})\nvin vin 0 3.3\n"
+                        ".subckt fixture gnd\nra a gnd 1k\nrb b gnd 1k\n.ends fixture\n"
+                        "xdut 0 fixture\n")
+                    tb, res = single_point.run("load-step", tb_dir=bench, num_threads=1)
+                    self.assertEqual(res.status, "ok", res.message)
+                    prefix = f"vout_step_to_{generate.ILOAD_MA}ma_"
+                    self.assertAlmostEqual(res.measurements[prefix + "ramp_min_v"], minimum)
+                    self.assertAlmostEqual(res.measurements[prefix + "ramp_max_v"], maximum)
+                    bad = report.analyze_results(tb, [res.point], [res], allow_unswept_axes=True)
+                    failed = {item["measurement"] for item in bad["failures"]}
+                    self.assertIn(prefix + "ramp_min_v", failed)
+                    self.assertIn(prefix + "ramp_max_v", failed)
+                    if name == "interior":
+                        for suffix in ("post_min_v", "post_max_v", "post_mean_v"):
+                            self.assertAlmostEqual(res.measurements[prefix + suffix], 5)
 
 
 class RenderLinesSummary(unittest.TestCase):
@@ -268,6 +313,138 @@ class ScopeHeadingAlwaysPresent(unittest.TestCase):
             {"at": "tt", "worst": "stress_a_vds_v", "worst_margin_v": 0.5, "violations": []}]})
         self.assertIn(self.HEADING, md)
         self.assertIn("Worst device-stress margin: 0.5 V", md)
+
+
+class WriteRecordFiles(unittest.TestCase):
+    """write_record persists the companion JSON record the Markdown scope
+    bullets point to (issue #46), append-only alongside the .md record."""
+
+    def _record(self, record_id):
+        from harness.runner import PointResult
+        tb = copy.deepcopy(testbench.load(SIM / "startup" / "testbench"))
+        tb.measure, tb.checks = {"vout_at_10ma_resistive_min_v": "x"}, {}
+        pts = corners.build_grid(corners.resolve_corners(["mos"]), [25.0], [3.3])
+        results = [
+            PointResult(point=pt, status="ok",
+                        measurements={"vout_at_10ma_resistive_min_v": 4.4 + 0.1 * i})
+            for i, pt in enumerate(pts)
+        ]
+        fake_pdk = pdk.Pdk(name="gf180", path=Path("/pdk/gf180mcuD"),
+                           variant="gf180mcuD", source="test", model_lib_rel="models")
+        return report.build_record(
+            tb, fake_pdk, pts, results, "ngspice-46", SIM.parent, record_id,
+            "2026-01-01T00:00:00Z", 1.0,
+            git={"commit": "testsha", "short": "testsha", "branch": "test", "dirty": False},
+        )
+
+    def test_writes_md_and_companion_json(self):
+        rid = "20260101-000000-testsha"
+        record = self._record(rid)
+        with tempfile.TemporaryDirectory() as td:
+            exp = Path(td)
+            md = exp / "records" / f"{rid}.md"
+            js = exp / "records" / f"{rid}.json"
+            self.assertEqual(report.write_record(record, exp), md)
+            public = {key: value for key, value in record.items() if not key.startswith("_")}
+            self.assertEqual(js.read_text(), json.dumps(public, indent=2) + "\n")
+            data = json.loads(js.read_text())
+            self.assertEqual(data["record_id"], rid)
+            # the Markdown bullet points readers at the full per-point list;
+            # the JSON record must actually carry it, unsummarized
+            self.assertEqual(len(data["scope"]["output_lines"]), 5)
+            self.assertIn("scope.output_lines", md.read_text())
+            # private rendering keys are serialized nowhere
+            self.assertNotIn("_evidence_lines", data)
+            self.assertFalse([k for k in data if k.startswith("_")])
+            # the in-memory dict is untouched
+            self.assertIn("_evidence_lines", record)
+            self.assertEqual(len(record["scope"]["output_lines"]), 5)
+            # the .md file remains the finished-record marker
+            self.assertTrue(report.record_exists(exp, rid))
+
+    def test_second_write_refused_without_overwriting(self):
+        rid = "20260101-000001-testsha"
+        record = self._record(rid)
+        with tempfile.TemporaryDirectory() as td:
+            exp = Path(td)
+            report.write_record(record, exp)
+            md = exp / "records" / f"{rid}.md"
+            js = exp / "records" / f"{rid}.json"
+            before = (md.read_bytes(), js.read_bytes())
+            with self.assertRaises(report.RecordExists):
+                report.write_record(record, exp)
+            self.assertEqual((md.read_bytes(), js.read_bytes()), before)
+
+    def test_render_failure_leaves_neither_record_file(self):
+        record = self._record("20261125-120000-abc1234")
+        with tempfile.TemporaryDirectory() as tmp:
+            exp = Path(tmp)
+            with patch.object(report, "render_markdown", side_effect=ValueError("render failed")):
+                with self.assertRaisesRegex(ValueError, "render failed"):
+                    report.write_record(record, exp)
+            self.assertFalse(list((exp / "records").glob("*")))
+
+    def test_nonfinite_measurements_survive_as_strict_json_strings(self):
+        record = self._record("20261125-120000-abc1234")
+        values = {"overflow": float("1e999"), "negative": -float("inf"),
+                  "undefined": float("nan"), "finite": -0.25}
+        record["points"][0].update(status="failed", measurements=values)
+
+        def reject_constant(token):
+            self.fail(f"bare non-finite JSON token: {token}")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = report.write_record(record, Path(tmp))
+            decoded = json.loads(path.with_suffix(".json").read_text(),
+                                 parse_constant=reject_constant)
+            point = decoded["points"][0]
+            self.assertEqual(point["status"], "failed")
+            self.assertEqual(point["measurements"], {"overflow": "Infinity",
+                             "negative": "-Infinity", "undefined": "NaN", "finite": -0.25})
+            self.assertIsInstance(record["points"][0]["measurements"]["overflow"], float)
+
+    def test_existing_md_refuses_without_orphan_json(self):
+        rid = "20260101-000002-testsha"
+        record = self._record(rid)
+        with tempfile.TemporaryDirectory() as td:
+            rec_dir = Path(td) / "records"
+            rec_dir.mkdir(parents=True)
+            (rec_dir / f"{rid}.md").write_text("prior record without a JSON companion\n")
+            with self.assertRaises(report.RecordExists):
+                report.write_record(record, rec_dir.parent)
+            self.assertFalse((rec_dir / f"{rid}.json").exists())
+
+    def test_orphan_json_blocks_ids_but_is_not_a_finished_record(self):
+        rid = "20260101-000003-testsha"
+        record = self._record(rid)
+        with tempfile.TemporaryDirectory() as td:
+            rec_dir = Path(td) / "records"
+            rec_dir.mkdir(parents=True)
+            (rec_dir / f"{rid}.json").write_text("{}\n")
+            with self.assertRaises(report.RecordExists):
+                report.write_record(record, rec_dir.parent)
+            self.assertFalse((rec_dir / f"{rid}.md").exists())
+            self.assertTrue(report._id_taken(rec_dir.parent, rid))
+            self.assertFalse(report.record_exists(rec_dir.parent, rid))
+
+    def test_id_taken_covers_md_json_and_spice(self):
+        with tempfile.TemporaryDirectory() as td:
+            exp = Path(td)
+            rec_dir = exp / "records"
+            rec_dir.mkdir(parents=True)
+            (exp / report.SNAPSHOT_DIR).mkdir()
+            md_rid, js_rid, spice_rid = (
+                "20260101-000004-testsha",
+                "20260101-000005-testsha",
+                "20260101-000006-testsha",
+            )
+            (rec_dir / f"{md_rid}.md").write_text("x\n")
+            (rec_dir / f"{js_rid}.json").write_text("{}\n")
+            (exp / report.SNAPSHOT_DIR / f"{spice_rid}.spice").write_text("*\n")
+            self.assertTrue(report._id_taken(exp, md_rid))
+            self.assertTrue(report._id_taken(exp, js_rid))
+            self.assertTrue(report._id_taken(exp, spice_rid))
+            self.assertFalse(report._id_taken(exp, "20260101-000007-testsha"))
 
 
 if __name__ == "__main__":

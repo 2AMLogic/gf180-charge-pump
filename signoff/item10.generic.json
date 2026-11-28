@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "kind": "generic",
+  "status": "pass",
+  "t1_item": 10,
+  "summary": "T1 item 10 (Repo hygiene): 11/11 attestation checks passed (klt signoff --attest)",
+  "source": "signoff/item10.json",
+  "attestation": {
+    "producer": "klt signoff --attest",
+    "inventory_schema_version": 1,
+    "hash_algorithm": "sha256-raw-bytes",
+    "check_count": 11,
+    "passed_count": 11,
+    "checks": [
+      {
+        "check": "present",
+        "role": "hygiene",
+        "path": ".github/workflows/sim-tests.yml",
+        "passed": true,
+        "content_hash": "sha256:ac77f1514e5e4418d8897918435ad5f99a3a2fc97998aa75afcff0547a288b58"
+      },
+      {
+        "check": "present",
+        "role": "hygiene",
+        "path": "LICENSE",
+        "passed": true,
+        "content_hash": "sha256:cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+      },
+      {
+        "check": "present",
+        "role": "hygiene",
+        "path": "README.md",
+        "passed": true,
+        "content_hash": "sha256:62796df6697d9798533c51692e1985d8d31bbbf3a2700b9103f9f22045804a3d"
+      },
+      {
+        "check": "present",
+        "role": "hygiene",
+        "path": "signoff/README.md",
+        "passed": true,
+        "content_hash": "sha256:23cf6760e5007205f81737e8cb854a12327c2d12cc1c7c7f779b4fd7143e33a3"
+      },
+      {
+        "check": "present",
+        "role": "hygiene",
+        "path": "signoff/check.sh",
+        "passed": true,
+        "content_hash": "sha256:64294376de7ec4467b1660ca6a0417a514b5cf5eb4578755283dfd01f3377bf4"
+      },
+      {
+        "check": "present",
+        "role": "hygiene",
+        "path": "signoff/requirements.txt",
+        "passed": true,
+        "content_hash": "sha256:8a7edeed028822126a351cd439ac65fe44a95adde7bdd5fff759425b262ace2e"
+      },
+      {
+        "check": "present",
+        "role": "hygiene",
+        "path": "sim/README.md",
+        "passed": true,
+        "content_hash": "sha256:c64f998f673049fedb4eaf07536923e6d4a61b460c03b541e1e8f1d18805d765"
+      },
+      {
+        "check": "present",
+        "role": "hygiene",
+        "path": "sim/harness/simgate.py",
+        "passed": true,
+        "content_hash": "sha256:10415d0ed3d60e95b07fef563a91345afc0f8ea07f1d86dc949d55c765a8e241"
+      },
+      {
+        "check": "present",
+        "role": "hygiene",
+        "path": "sim/tests/test_simgate.py",
+        "passed": true,
+        "content_hash": "sha256:cdd74c213fb089d1a60d4d075b393a6ab1fc0beb763281656dc5dc3edc7b200c"
+      },
+      {
+        "check": "command",
+        "role": "audit",
+        "name": "simulation gate rejects missing tools when CI requires simulation",
+        "argv": [
+          "python3",
+          "-m",
+          "unittest",
+          "sim.tests.test_simgate",
+          "-q"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true
+      },
+      {
+        "check": "command",
+        "role": "audit",
+        "name": "block README links the reproduction instructions",
+        "argv": [
+          "git",
+          "grep",
+          "-qF",
+          "(signoff/README.md)",
+          "--",
+          "README.md"
+        ],
+        "cwd": ".",
+        "exit_status": 0,
+        "passed": true
+      }
+    ]
+  },
+  "provenance": {
+    "klt_version": "0.9.2",
+    "klayout_version": null,
+    "pdk": null,
+    "deck": null,
+    "input": {
+      "path": {
+        "path": "signoff/item10.json",
+        "scope": "repo"
+      },
+      "content_hash": "sha256:bf096347b7b3385545e279b6ee0e5376b5eccd95ea26aa52f9e31e0b5a80d838"
+    }
+  }
+}

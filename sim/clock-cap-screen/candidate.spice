@@ -1,0 +1,60 @@
+* Feasibility bench for an enabled oscillator, clock drivers and cross-coupled doubler.
+* MOS pins are drain, gate, source, body. All diffusion extensions are 0.18 um.
+.subckt n6 d g s b params: w=4u fingers=1
+xm d g s b nfet_06v0 w={w} l=0.7u m={fingers} ad={w*0.18u} as={w*0.18u} pd={2*(w+0.18u)} ps={2*(w+0.18u)}
+.ends
+.subckt p6 d g s b params: w=8u fingers=1
+xm d g s b pfet_06v0 w={w} l=0.7u m={fingers} ad={w*0.18u} as={w*0.18u} pd={2*(w+0.18u)} ps={2*(w+0.18u)}
+.ends
+.subckt inv6 a z vp
+xn z a 0 0 n6
+xp z a vp vp p6
+.ends
+.subckt inv3 a z vp params: copies=1
+xn z a 0 0 nfet_03v3 w=10u l=0.28u m={copies} ad=1.8p as=1.8p pd=20.36u ps=20.36u
+xp z a vp vp pfet_03v3 w=20u l=0.28u m={copies} ad=3.6p as=3.6p pd=40.36u ps=40.36u
+.ends
+
+* An enabled three-stage ring starts from its disabled DC operating point.
+* Tapered 3.3 V inverters isolate the timing node and drive both MIM banks.
+vinput vin 0 {input_v}
+vdriver vr 0 {driver_v}
+ven en 0 pwl(0 0 100n 0 102n {driver_v})
+xnand1 r0 r2 nstack 0 n6 w=8u
+xnand2 nstack en 0 0 n6 w=8u
+xpand1 r0 r2 vr vr p6
+xpand2 r0 en vr vr p6
+xring1 r0 r1 vr inv6
+xring2 r1 r2 vr inv6
+cr0 r0 0 {wire_c}
+cr1 r1 0 {wire_c}
+cr2 r2 0 {wire_c}
+* Three identical PDK timing capacitors are additional to the 221 pump units.
+xtime0 r0 0 cap_mim_2f0_m4m5_noshield c_length={delay_side} c_width={delay_side}
+xtime1 r1 0 cap_mim_2f0_m4m5_noshield c_length={delay_side} c_width={delay_side}
+xtime2 r2 0 cap_mim_2f0_m4m5_noshield c_length={delay_side} c_width={delay_side}
+xsense r0 buf vr inv3
+xtrue buf a1 vr inv3 copies=5
+xtrueout a1 clk vr inv3 copies=30
+xcomp buf ib vr inv3
+xcomp2 ib b1 vr inv3 copies=5
+xcompout b1 clkb vr inv3 copies=30
+
+* 56 and 56 flying units, 109 reservoir units in a fixed 221-unit coupon.
+xca a clk cap_mim_2f0_m4m5_noshield c_length=40u c_width=40u m=56
+xcb b clkb cap_mim_2f0_m4m5_noshield c_length=40u c_width=40u m=56
+xco out 0 cap_mim_2f0_m4m5_noshield c_length=40u c_width=40u m=109
+* Explicit assumed 1% nominal plate loading; the MIM subcircuit has no substrate pin.
+cpa a 0 1.8004p
+cpb b 0 1.8004p
+xn1 a b vin 0 n6 w=40u fingers=10
+xn2 b a vin 0 n6 w=40u fingers=10
+xp1 a b out nw1 p6 w=80u fingers=10
+xp2 b a out nw2 p6 w=80u fingers=10
+vbody1 nw1 out 0
+vbody2 nw2 out 0
+rkeep out 0 1g
+* S8 control: externally ideal 5.45 V shunt reference and a 1 ohm on-slope.
+bshunt out 0 i={clamp_on*max(v(out)-5.45,0)}
+* 10 us linear load ramp, 10 us at 10 mA, then a 100 ns release.
+iload out 0 pwl(0 0 2u 0 12u 10m 22u 10m 22.1u 0)

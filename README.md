@@ -59,6 +59,9 @@ check instead of skipping. CodeQL green alone says nothing about the suite;
 look for a green `sim-tests` check. Locally, without `REQUIRE_SIM`, the
 simulator-dependent tests skip.
 
+The [T1 reproduction instructions](signoff/README.md) cover tool installation,
+the pinned PDK and the committed checklist report.
+
 ## Built agent-native
 
 Every specification, decision record, testbench, and line of documentation in

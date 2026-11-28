@@ -1,0 +1,43 @@
+{
+  "ngspice": 46,
+  "circuit_sha256": "3509f086865b6faf7dfd0ef95e112c9c3315ace89a5bc688ede5bee40ebcf126",
+  "model_sha256": {
+    "design.ngspice": "7e222f050318388f37543a64fbd0be55cc15e4b93f57501a09f7c159c4c9e561",
+    "sm141064.ngspice": "f6f4a96e18fc5ad11270ad3451aaecc7ac37fc81eb61e15b0d7d94c7bc594a24",
+    "sm141064.spice": "f6f4a96e18fc5ad11270ad3451aaecc7ac37fc81eb61e15b0d7d94c7bc594a24",
+    "sm141064_mim.spice": "9b85cd009968d9aeb6b61046b24a63f39d6a463c4e4aee3949c8fd183c06666f"
+  },
+  "suite": "capacitance",
+  "records": [
+    {
+      "mim": "mimcap_ff",
+      "capacitance_pf": {
+        "xtime0": 0.121487,
+        "xca": 162.3953,
+        "xcb": 162.3953,
+        "xco": 316.0908,
+        "xunit": 2.899915
+      }
+    },
+    {
+      "mim": "mimcap_typical",
+      "capacitance_pf": {
+        "xtime0": 0.1349856,
+        "xca": 180.4392,
+        "xcb": 180.4392,
+        "xco": 351.212,
+        "xunit": 3.222128
+      }
+    },
+    {
+      "mim": "mimcap_ss",
+      "capacitance_pf": {
+        "xtime0": 0.1484842,
+        "xca": 198.4831,
+        "xcb": 198.4831,
+        "xco": 386.3331,
+        "xunit": 3.544341
+      }
+    }
+  ]
+}

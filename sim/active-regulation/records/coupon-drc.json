@@ -1,0 +1,86 @@
+{
+  "all": {
+    "checked_categories": 768,
+    "checked_names_sha256": "0cfb546365107825552825bb6e8d257f5230efca93e87fc54917e563769abb2c",
+    "coverage_assertion_satisfied": true,
+    "provenance": {
+      "deck": {
+        "content_hash": "sha256:e7c7d2597890cfcb4cf0e5312f5652051a119fb3e1cc1772a6e5c04594bc65d8",
+        "name": "gf180mcu.drc",
+        "options": {
+          "decks": "all",
+          "threads": "1",
+          "variant": "D"
+        },
+        "released": false,
+        "tree": {
+          "content_hash": "sha256:8af3b4875893f3ffbff639bd7e2966c5e3b9b27f70d03e86d6da46ca9510fbc4",
+          "file_count": 6,
+          "release": null
+        }
+      },
+      "input": {
+        "content_hash": "sha256:481f4edbdeadc6baaa2c0058f17a296affb870d17cef646370802ca11b7fd630",
+        "role": "layout"
+      },
+      "klayout_version": "0.30.14",
+      "klayout_version_mismatch": true,
+      "klt_git_commit": "046ba74652fc096bd97071fc3237f7159dd40183",
+      "klt_reinstall_spec": "klayout-tools==0.9.2",
+      "klt_version": "0.9.2",
+      "pdk": {
+        "name": "gf180mcuD",
+        "source": "--pdk-root flag",
+        "version": "open_pdks f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7"
+      }
+    },
+    "rule_counts": {
+      "DCF.1b": 1,
+      "M1.4": 1,
+      "M2.4": 1,
+      "M3.4": 1,
+      "PL.8": 1
+    },
+    "status": "violations",
+    "violation_count": 5
+  },
+  "mim_b": {
+    "checked_categories": 12,
+    "checked_names_sha256": "bfe87a40877df26cf1eabaf2dcfc235970b0e58a3e88acafbc4a91e0207b8aa2",
+    "coverage_assertion_satisfied": true,
+    "provenance": {
+      "deck": {
+        "content_hash": "sha256:e7c7d2597890cfcb4cf0e5312f5652051a119fb3e1cc1772a6e5c04594bc65d8",
+        "name": "gf180mcu.drc",
+        "options": {
+          "decks": "mim_b",
+          "threads": "1",
+          "variant": "D"
+        },
+        "released": false,
+        "tree": {
+          "content_hash": "sha256:8af3b4875893f3ffbff639bd7e2966c5e3b9b27f70d03e86d6da46ca9510fbc4",
+          "file_count": 6,
+          "release": null
+        }
+      },
+      "input": {
+        "content_hash": "sha256:481f4edbdeadc6baaa2c0058f17a296affb870d17cef646370802ca11b7fd630",
+        "role": "layout"
+      },
+      "klayout_version": "0.30.14",
+      "klayout_version_mismatch": true,
+      "klt_git_commit": "046ba74652fc096bd97071fc3237f7159dd40183",
+      "klt_reinstall_spec": "klayout-tools==0.9.2",
+      "klt_version": "0.9.2",
+      "pdk": {
+        "name": "gf180mcuD",
+        "source": "--pdk-root flag",
+        "version": "open_pdks f6eeac7dad085ffcc829ccfd721f7b4ce39edcf7"
+      }
+    },
+    "rule_counts": {},
+    "status": "clean",
+    "violation_count": 0
+  }
+}
