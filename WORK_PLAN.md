@@ -7,7 +7,7 @@ The body below is a snapshot of GitHub label state as of the last merged docs-ma
 <!-- Maintained automatically by the Guide triage agent. Manual edits are fine but may be overwritten. -->
 
 <!-- guide:plan-body:start -->
-_Generated: 2026-11-25T18:15:00Z (snapshot; compare against live labels)_
+_Generated: 2026-11-26T05:46:10Z (snapshot; compare against live labels)_
 ## Operator Attention: Merge-Risk-Hold Pileup
 
 Judge-approved PRs under a hold (`loom:blocked` or `loom:operator`) — only a human merge decision is missing.
@@ -43,6 +43,7 @@ _None._
 Issues currently being built (`loom:building`).
 
 - **#1**: Ratify the target spec
+- **#46**: pump_evidence.render_lines points readers to 'scope.output_lines in the JSON record', but write_record never writes a JSON file
 
 ## PRs Awaiting Review
 
@@ -54,7 +55,7 @@ _None._
 
 PRs that passed review and are queued for Champion auto-merge (`loom:pr`).
 
-_None._
+- **#47**: fix: persist the companion JSON record the Markdown record points to — closes #46
 
 ## Proposed
 
@@ -78,10 +79,10 @@ _None._
 | Very important | 0 |
 | Important | 1 |
 | Ready (`loom:issue`, net of holds/building/open-linked-PRs) | 0 |
-| In Progress (`loom:building`) | 1 |
-| Held, no other bucket | 1 |
+| In Progress (`loom:building`) | 2 |
+| Held, no other bucket | 3 |
 | PRs awaiting review | 0 |
-| Approved PRs awaiting merge | 0 |
+| Approved PRs awaiting merge | 1 |
 | Curated | 1 |
 | Architect / Hermit proposals | 1 |
 | Active epics | 0 |
